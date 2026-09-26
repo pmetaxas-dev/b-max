@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "B-MAX",
+  "version": "0.2.0",
+  "description": "One goal, one current step, and a calm way back to it.",
+  "permissions": ["tabs", "alarms", "storage", "idle", "webNavigation", "tts", "offscreen"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "B-MAX",
+    "default_popup": "summary/summary.html"
+  },
+  "sandbox": {
+    "pages": ["shared/planet/planet.html"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content/loader.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/page-object.js", "content/anchor.js", "content/page-metadata.js", "content/voice-answer.js", "shared/a11y.js", "shared/messaging.js", "shared/i18n.js", "shared/auth-pages.js",
+        "shared/max/max.svg", "shared/max/max-body.svg", "shared/max/max.css",
+        "shared/max/max.js", "shared/max/max-intervention.css", "shared/max/max-intervention.js"
+      ],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ],
+  "commands": {
+    "focus-companion": {
+      "suggested_key": { "default": "Alt+Shift+K" },
+      "description": "Move keyboard focus to the B-MAX bubble"
+    },
+    "read-status": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Max says where you are: the task now, what follows, your planet"
+    },
+    "dictate": {
+      "suggested_key": { "default": "Alt+Shift+V" },
+      "description": "Speak to Max on this page (or answer his pop-up with your voice)"
+    },
+    "open-max": {
+      "suggested_key": { "default": "Alt+Shift+M" },
+      "description": "Open Max on this page to talk to him"
+    }
+  }
+}
