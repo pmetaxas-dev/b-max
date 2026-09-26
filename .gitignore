@@ -1,0 +1,7 @@
+# User data and secrets never go to Git (architecture-plan-v2 §13)
+server/data/
+/server/cmd/server/data/
+/docs/ADHD Daily Challenges & Digital Tools — Research Questionnaire.csv
+.env
+*.env
+server/.go-cache/

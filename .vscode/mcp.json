@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "lean-ctx": {
+      "type": "stdio",
+      "command": "C:\\Users\\Gebruiker\\AppData\\Roaming\\npm\\node_modules\\lean-ctx-bin\\bin\\lean-ctx.exe"
+    }
+  }
+}
