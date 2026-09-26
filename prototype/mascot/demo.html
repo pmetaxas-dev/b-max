@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lumi emergence demo</title>
+  <!-- ?v= is bumped by hand whenever lumi.css/lumi.js change, so a plain refresh of an
+       already-open tab always picks up the new file instead of a browser-cached copy
+       (python's http.server sets no explicit Cache-Control, so caching is heuristic). -->
+  <link rel="stylesheet" href="lumi.css?v=headlock1">
+  <link rel="stylesheet" href="lumi-intervention.css?v=intervention1">
+  <style>
+    body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: #eef0f3; color: #2b2d36; }
+    main { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 16px; margin: 0 0 4px; }
+    p { margin: 0 0 16px; color: #555a66; }
+
+    /* Fake "webpage" so Lumi's presence can be judged against content. */
+    .stage { position: relative; height: 400px; overflow: hidden; background: #fff; border: 1px solid #d5d8df; border-radius: 10px; }
+    .fake-line { position: absolute; left: 24px; height: 10px; border-radius: 5px; background: #e6e8ee; }
+
+    /* DEMO ONLY. Zoom: scales Lumi about the anchor point (the anchor is zero-size, so its centre is the point). */
+    .lumi-anchor { transform: scale(var(--demo-zoom, 1)); }
+
+    /* DEMO ONLY guides: Lumi's centre, the 45px visible-bulb circle, and the collar line the body hangs from. */
+    .guide { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); pointer-events: none; display: none; }
+    .show-guides .guide { display: block; }
+    .g-dot { width: 4px; height: 4px; border-radius: 50%; background: #e5484d; z-index: 2; }
+    .g-45 { width: 45px; height: 45px; border: 1px dashed #3b82f6; box-sizing: border-box; border-radius: 50%; z-index: 2; }
+    /* collar tip is y=277 of 300 in the lamp box: 127/300 of the box below the anchor */
+    .g-collar { top: calc(var(--lumi-size) * 127 / 300); width: 56px; height: 0; border-top: 1px dashed #e5484d; z-index: 2; }
+
+    /* DEMO ONLY x-ray: makes the lamp see-through so the body can be seen INSIDE it. */
+    .xray .lumi { opacity: 0.3; }
+    .xray .lumi-body { visibility: visible !important; }   /* also show the folded-up body while hidden */
+
+    /* DEMO ONLY composition guides: outlines the card's and the body's ACTUAL rendered
+       rects (measured live, in the tick() loop below) so the occlusion between them --
+       the whole point of the intervention layer -- is checkable, not just eyeballed.
+       .v-guide-overlap is the intersection of the two, i.e. the part of Lumi the card
+       is actually covering right now. */
+    .v-guide-box { position: fixed; pointer-events: none; box-sizing: border-box; z-index: 999; display: none; }
+    .show-v-guides .v-guide-box { display: block; }
+    .v-guide-card { border: 2px dashed #3b82f6; }
+    .v-guide-body { border: 2px dashed #e07b00; }
+    .v-guide-overlap { background: rgba(224, 123, 0, 0.22); border: none; }
+
+    .controls { margin: 16px 0 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .controls .sep { width: 1px; align-self: stretch; background: #c9ccd4; }
+    button, select { font: inherit; padding: 6px 12px; border: 1px solid #b8bcc6; border-radius: 6px; background: #fff; cursor: pointer; }
+    select { padding: 6px 8px; }
+    button.primary { background: #2b2d36; color: #fff; border-color: #2b2d36; }
+    button:disabled { opacity: 0.45; cursor: default; }
+    label { display: flex; gap: 6px; align-items: center; color: #555a66; }
+    .readout { font: 12px/1.5 ui-monospace, monospace; color: #555a66; margin-top: 10px; white-space: pre; }
+    #error { color: #b3261e; display: none; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Lumi: small lamp, body emerging from it</h1>
+  <p>The lamp (bulb ~45px) is Lumi's head and her permanent form: it never grows or disappears. "Emerge Lumi" brings the body out of the lamp: it starts folded up inside the lamp, comes down out of the collar (torso, then legs, then arms), and stays attached. "Return to lamp" folds it back in. Position lives on the anchor only: "Move anchor (test)" moves the anchor and the body follows. Demo-only aids: guides, X-ray (see the body inside the lamp) and zoom (the real size is small). No text, voice or dragging yet.</p>
+
+  <div class="stage show-guides" id="stage">
+    <div class="fake-line" style="top:28px;width:46%"></div>
+    <div class="fake-line" style="top:52px;width:70%"></div>
+    <div class="fake-line" style="top:76px;width:38%"></div>
+    <div class="fake-line" style="top:350px;width:60%"></div>
+    <div class="fake-line" style="top:372px;width:42%"></div>
+
+    <!-- Position lives on the anchor only. The body layer (behind) and the lamp are its children.
+         The body is the SAME box as the lamp, so it always hangs from the lamp's collar. -->
+    <div class="lumi-anchor" id="anchor" data-lumi-body="hidden" style="--lumi-x: 72%; --lumi-y: 48px">
+      <div class="lumi-body" id="body" aria-hidden="true"></div>
+      <div class="lumi" id="lumi"></div>
+      <div class="guide g-45"></div>
+      <div class="guide g-collar"></div>
+      <div class="guide g-dot"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="emerge" class="primary">Emerge Lumi</button>
+    <button id="return" disabled>Return to lamp</button>
+    <span class="sep"></span>
+    <button id="talk">Start talking</button>
+    <button id="stoptalk" disabled>Stop talking</button>
+    <button id="blink">Blink now</button>
+    <button id="move">Move anchor (test)</button>
+    <span class="sep"></span>
+    <label><input type="checkbox" id="guides" checked> Guides</label>
+    <label><input type="checkbox" id="xray"> X-ray</label>
+    <label>Zoom <select id="zoom"><option value="1">1x (real)</option><option value="2">2x</option><option value="3">3x</option></select></label>
+    <span id="error">Could not load lumi.svg / lumi-body.svg. Serve this folder over http (see README); file:// blocks fetch().</span>
+  </div>
+  <div class="readout" id="readout"></div>
+
+  <h1 style="margin-top:28px">Intervention layer: 5 poses, hands on the card</h1>
+  <p>Lumi's lamp/body/talking are unchanged above; this adds a conversational CARD as a FOREGROUND layer (never in front of her head) that she physically interacts with: one or two hands actually rest on/grip the card's edge in every variant, not just a body parked beside it. "Composition guides" outlines the card's bounds (blue) and the body's bounds (orange), with their overlap (the occluded part) shaded. "Random variant" demonstrates <code>pickLumiVariant()</code>, which never repeats the immediately-previous pick. The card is positioned relative to the anchor and flips side/direction to avoid the edges of this stage (try "Move anchor (test)" above, then a variant).</p>
+  <div class="controls">
+    <button id="v-peek-side">Variant 1 &mdash; Side peek</button>
+    <button id="v-peek-top">Variant 2 &mdash; Top peek</button>
+    <button id="v-full-behind">Variant 3 &mdash; Full behind</button>
+    <button id="v-full-lean">Variant 4 &mdash; Side lean</button>
+    <button id="v-full-entrance">Variant 5 &mdash; Full pose</button>
+    <span class="sep"></span>
+    <button id="v-random">Random variant</button>
+    <button id="v-close">Close intervention</button>
+    <label><input type="checkbox" id="v-guides"> Composition guides</label>
+  </div>
+  <div class="readout" id="v-readout"></div>
+</main>
+
+<!-- DEMO ONLY: outlines for the "Composition guides" toggle, positioned live in the tick() loop below. -->
+<div class="v-guide-box v-guide-overlap" id="v-guide-overlap"></div>
+<div class="v-guide-box v-guide-card" id="v-guide-card"></div>
+<div class="v-guide-box v-guide-body" id="v-guide-body"></div>
+
+<script src="lumi.js?v=headlock1"></script>
+<script src="lumi-intervention.js?v=intervention1"></script>
+<script>
+  var lumi = document.getElementById('lumi');
+  var body = document.getElementById('body');
+  var anchor = document.getElementById('anchor');
+  var stage = document.getElementById('stage');
+  var readout = document.getElementById('readout');
+  var emergeBtn = document.getElementById('emerge');
+  var returnBtn = document.getElementById('return');
+
+  function text(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(url); return r.text(); }); }
+
+  Promise.all([text('lumi.svg'), text('lumi-body.svg')])
+    .then(function (svgs) {
+      lumi.innerHTML = svgs[0];
+      body.innerHTML = svgs[1];
+      var idle = startLumiIdle(lumi.querySelector('svg'));
+
+      function syncButtons() {
+        var s = lumiBodyState(anchor);
+        emergeBtn.disabled = s === 'active' || s === 'emerging';
+        returnBtn.disabled = s === 'hidden' || s === 'returning';
+      }
+      emergeBtn.onclick = function () { emergeLumi(anchor).then(syncButtons); syncButtons(); };
+      returnBtn.onclick = function () { returnLumi(anchor).then(syncButtons); syncButtons(); };
+
+      var talkBtn = document.getElementById('talk'), stopTalkBtn = document.getElementById('stoptalk');
+      talkBtn.onclick = function () { idle.startTalking(); talkBtn.disabled = true; stopTalkBtn.disabled = false; };
+      stopTalkBtn.onclick = function () { idle.stopTalking(); talkBtn.disabled = false; stopTalkBtn.disabled = true; };
+      document.getElementById('blink').onclick = function () { idle.blink(); };
+      document.getElementById('guides').onchange = function (e) { stage.classList.toggle('show-guides', e.target.checked); };
+      document.getElementById('xray').onchange = function (e) { stage.classList.toggle('xray', e.target.checked); };
+
+      // Test only: jumps the ANCHOR to a fixed spot (never the lamp or the body directly).
+      // Real dragging is enableLumiDrag() below -- drag the lamp itself.
+      // Spots are [x, extra y]; the base y makes room for the zoomed-in body (all spots keep it inside the stage).
+      var zoom = 1, spot = 0;
+      var spots = [['72%', 0], ['30%', 0], ['50%', 40], ['88%', 12]];
+      function place() {
+        anchor.style.setProperty('--lumi-x', spots[spot][0]);
+        anchor.style.setProperty('--lumi-y', (24 + 24 * zoom + spots[spot][1]) + 'px');
+      }
+      document.getElementById('move').onclick = function () { spot = (spot + 1) % spots.length; place(); };
+      document.getElementById('zoom').onchange = function (e) {
+        zoom = +e.target.value;
+        anchor.style.setProperty('--demo-zoom', zoom);
+        place();
+      };
+
+      // Live readout of the actual rendered geometry (stage coordinates).
+      function bb(sel) { return body.querySelector(sel).getBoundingClientRect(); }
+      function centre(r, s) { return '(' + (r.left + r.width / 2 - s.left).toFixed(1) + ', ' + (r.top + r.height / 2 - s.top).toFixed(1) + ')'; }
+      (function tick() {
+        var s = stage.getBoundingClientRect();
+        var a = anchor.getBoundingClientRect();
+        var l = lumi.getBoundingClientRect();
+        var rim = lumi.querySelector('#lumi-bulb-rim').getBoundingClientRect();
+        readout.textContent =
+          'body state: ' + lumiBodyState(anchor) + (idle.isTalking() ? '   (lamp talking)' : '') + '\n' +
+          'anchor:     (' + (a.left - s.left).toFixed(1) + ', ' + (a.top - s.top).toFixed(1) + ')\n' +
+          'lamp:       box ' + l.width.toFixed(1) + 'px, bulb ' + rim.width.toFixed(1) + 'px, centre ' + centre(l, s) + '\n' +
+          'torso:      centre ' + centre(bb('#lumib-torso'), s) + ', ' + bb('#lumib-torso').height.toFixed(1) + 'px tall\n' +
+          'legs+shoes: centre ' + centre(bb('#lumib-legs'), s) + ', bottom ' + (bb('#lumib-legs').bottom - s.top).toFixed(1) + ' (stage height ' + s.height.toFixed(0) + ')';
+        requestAnimationFrame(tick);
+      })();
+
+      place();
+      syncButtons();
+      enableLumiDrag(anchor); // after place(): a session-restored drag position wins over the demo's default spot
+
+      // ---- intervention layer demo controls (lumi-intervention.js) --------
+      var vReadout = document.getElementById('v-readout');
+      var lastIntervention = null;
+      function runVariant(variant) {
+        lastIntervention = showLumiIntervention({ anchor: anchor, variant: variant });
+        vReadout.textContent = 'showing: ' + lastIntervention.variant + '   (card side: ' + lastIntervention.side + ')';
+        lastIntervention.ready.then(function () {
+          vReadout.textContent += '   — settled';
+        });
+      }
+      document.getElementById('v-peek-side').onclick = function () { runVariant('peek-side'); };
+      document.getElementById('v-peek-top').onclick = function () { runVariant('peek-top'); };
+      document.getElementById('v-full-behind').onclick = function () { runVariant('full-behind'); };
+      document.getElementById('v-full-lean').onclick = function () { runVariant('full-lean'); };
+      document.getElementById('v-full-entrance').onclick = function () { runVariant('full-entrance'); };
+      document.getElementById('v-random').onclick = function () { runVariant(pickLumiVariant(undefined, anchor)); };
+      document.getElementById('v-close').onclick = function () {
+        closeLumiIntervention(anchor).then(function () { vReadout.textContent = 'closed'; });
+      };
+
+      // ---- composition guides (demo only): live card-bounds / body-bounds / overlap ----
+      var vGuideCard = document.getElementById('v-guide-card');
+      var vGuideBody = document.getElementById('v-guide-body');
+      var vGuideOverlap = document.getElementById('v-guide-overlap');
+      document.getElementById('v-guides').onchange = function (e) {
+        document.documentElement.classList.toggle('show-v-guides', e.target.checked);
+      };
+      function setBox(el, r) {
+        el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+        el.style.width = Math.max(0, r.width) + 'px'; el.style.height = Math.max(0, r.height) + 'px';
+      }
+      function rectOf(el) { return el ? el.getBoundingClientRect() : null; }
+      function intersect(a, b) {
+        var l = Math.max(a.left, b.left), t = Math.max(a.top, b.top);
+        var r = Math.min(a.right, b.right), btm = Math.min(a.bottom, b.bottom);
+        return { left: l, top: t, width: r - l, height: btm - t };
+      }
+      (function guideTick() {
+        var card = anchor.querySelector('.lumi-card');
+        var bodyRoot = body.querySelector('#lumib-root');
+        if (card && card.getAttribute('data-lumi-card-open') === 'true' && bodyRoot) {
+          var cardRect = rectOf(card), bodyRect = rectOf(bodyRoot);
+          setBox(vGuideCard, cardRect);
+          setBox(vGuideBody, bodyRect);
+          setBox(vGuideOverlap, intersect(cardRect, bodyRect));
+        } else {
+          setBox(vGuideCard, { left: 0, top: 0, width: 0, height: 0 });
+          setBox(vGuideBody, { left: 0, top: 0, width: 0, height: 0 });
+          setBox(vGuideOverlap, { left: 0, top: 0, width: 0, height: 0 });
+        }
+        requestAnimationFrame(guideTick);
+      })();
+
+      window.__lumiReady = true;
+    })
+    .catch(function () { document.getElementById('error').style.display = 'inline'; });
+</script>
+</body>
+</html>

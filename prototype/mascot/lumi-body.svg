@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" overflow="visible" role="img" aria-labelledby="lumib-title lumib-desc">
+  <title id="lumib-title">Lumi, body</title>
+  <desc id="lumib-desc">Lumi's body, from the collar down: a white capsule torso with a glowing chest badge, curved dark rubber-hose arms and legs, white gloves, and chunky white and orange sneakers.</desc>
+  <!--
+    Lumi BODY (neck down), prototype. Drawn from lumi-design.png ("Idle" and hero poses).
+
+    There is NO head here: the small lamp (lumi.svg) IS Lumi's head, and this body hangs from its collar.
+    The svg uses the SAME 300-unit coordinate space as lumi.svg and is displayed in the SAME box as the
+    lamp (see lumi.css, .lumi-body), so lamp coordinates apply directly:
+      lamp bulb centre (150,150) r=100, collar y 248-277.
+      Body: torso y ~257-382 whose top is only as wide as the collar (x 127-173), so it starts AT the collar
+      and its outline never runs up beside the glass; a dark neck (#lumib-neck, y 254-292) starts behind the
+      collar and flares into the shoulders, so it meets the collar at every phase of the lamp's float;
+      chest badge y=322, gloves y ~358-428, legs to y~440, shoes y 421-483, shadow y~484.
+      Below the collar the body is ~205 units = one bulb diameter, like the reference.
+    Nothing is painted above y=246, so the body can sit hidden behind the lamp's opaque glass and collar.
+
+    Parts (each is its own group so lumi.css can animate them separately):
+      #lumib-core     the attached trunk: #lumib-legs (legs + shoes) behind #lumib-torso (neck, capsule,
+                      chest badge). It moves as ONE piece, so it never comes apart while emerging.
+      .lumib-arm      thin dark arm (behind the core), one per side
+      .lumib-glove    glove (in front of everything), one per side
+      #lumib-shadow   ground shadow
+    The right arm/glove are the left ones mirrored about x=150 by a WRAPPER <g transform>, so the
+    inner element is free to take CSS transforms in the same local coordinates.
+    Paint order: shadow, arms, core (legs, torso), gloves.
+  -->
+  <defs>
+    <radialGradient id="lumib-grad-white" cx="0.4" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.65" stop-color="#F4F6F8"/>
+      <stop offset="1" stop-color="#D9DDE7"/>
+    </radialGradient>
+    <radialGradient id="lumib-grad-button" cx="0.45" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#FFF6D6"/>
+      <stop offset="0.6" stop-color="#FFD54A"/>
+      <stop offset="1" stop-color="#FFC233"/>
+    </radialGradient>
+    <radialGradient id="lumib-grad-button-glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFD54A" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#FFD54A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lumib-grad-shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#2B2D36" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#2B2D36" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Left sneaker, toe pointing outward (left). The right one is this mirrored about x=150. -->
+    <g id="lumib-shoe" stroke="#2B2D36" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M70 457 L146 457 C150 470 146 483 136 483 L86 483 C75 483 70 471 70 457 Z" fill="#FF8A3D"/>
+      <path d="M146 459 C151 440 146 424 130 422 C120 421 111 426 103 434 C85 436 69 445 70 459 Z" fill="url(#lumib-grad-white)"/>
+      <path d="M106 440 C120 443 129 451 130 459" fill="none" stroke="#FF8A3D" stroke-width="6"/>
+      <path d="M82 449 C88 446 95 446 100 448" fill="none" stroke="#D9DDE7" stroke-width="2"/>
+      <path d="M122 428 L134 432 M119 434 L131 438" fill="none" stroke="#B9BFCD" stroke-width="2"/>
+    </g>
+
+    <!-- Left arm (dark rubber hose), from behind the shoulder out and down to the wrist. -->
+    <path id="lumib-arm-shape" d="M108 290 C90 296 79 324 84 354 L88 374" fill="none" stroke="#2B2D36" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Left glove: cuff, mitten, thumb on the inner side, finger lines at the fingertips. -->
+    <g id="lumib-glove-shape" fill="url(#lumib-grad-white)" stroke="#2B2D36" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+      <rect x="64" y="366" width="38" height="15" rx="6.5"/>
+      <path d="M67 380 C59 403 66 428 83 429 C100 429 107 405 99 380 Z"/>
+      <ellipse cx="102" cy="398" rx="7" ry="11" transform="rotate(-15 102 398)"/>
+      <path d="M74 427 V417 M83 429 V418 M92 427 V417" fill="none" stroke-width="2.4"/>
+    </g>
+  </defs>
+
+  <g id="lumib-root">
+    <ellipse id="lumib-shadow" cx="150" cy="484" rx="100" ry="11" fill="url(#lumib-grad-shadow)"/>
+
+    <!-- Arms (behind the core) -->
+    <g id="lumib-arms">
+      <g class="lumib-arm"><use href="#lumib-arm-shape"/></g>
+      <g transform="translate(300 0) scale(-1 1)"><g class="lumib-arm"><use href="#lumib-arm-shape"/></g></g>
+    </g>
+
+    <!-- Core: one attached piece. Legs + shoes (behind), then the torso. -->
+    <g id="lumib-core">
+    <g id="lumib-legs">
+      <g fill="none" stroke="#2B2D36" stroke-width="15" stroke-linecap="round">
+        <path d="M132 372 C127 394 136 414 129 440"/>
+        <path d="M168 372 C173 394 164 414 171 440"/>
+      </g>
+      <use href="#lumib-shoe" x="-3"/>
+      <use href="#lumib-shoe" transform="translate(300 0) scale(-1 1) translate(-3 0)"/>
+    </g>
+
+    <!-- Torso: capsule body that starts at the collar (its top is only as wide as the collar, so the
+         dark outline never runs up beside the bulb), a dark neck that meets the collar, glowing badge -->
+    <g id="lumib-torso">
+      <path d="M127 262 C113 268 104 282 101 304 C99 344 108 368 126 376 C138 382 162 382 174 376 C192 368 201 344 199 304 C196 282 187 268 173 262 C160 257 140 257 127 262 Z" fill="url(#lumib-grad-white)"/>
+      <path d="M190 282 C199 312 197 350 182 372 C174 379 162 381 150 381 C172 374 188 342 190 282 Z" fill="#B9BFCD" opacity="0.45"/>
+      <path d="M127 262 C113 268 104 282 101 304 C99 344 108 368 126 376 C138 382 162 382 174 376 C192 368 201 344 199 304 C196 282 187 268 173 262 C160 257 140 257 127 262 Z" fill="none" stroke="#2B2D36" stroke-width="3.5" stroke-linejoin="round"/>
+      <!-- neck: starts behind the collar (y=254, always covered by it, even at the top of the lamp's float)
+           and flares into the shoulders, so there is no gap under the collar -->
+      <path id="lumib-neck" d="M131 254 H169 C171 268 175 278 181 285 C168 292 132 292 119 285 C125 278 129 268 131 254 Z" fill="#2B2D36"/>
+      <g id="lumib-badge">
+        <circle cx="150" cy="322" r="30" fill="url(#lumib-grad-button-glow)"/>
+        <circle cx="150" cy="322" r="19" fill="#2B2D36"/>
+        <circle cx="150" cy="322" r="16.5" fill="#FF8A3D"/>
+        <circle cx="150" cy="322" r="11.5" fill="url(#lumib-grad-button)"/>
+        <ellipse cx="146" cy="317.5" rx="4" ry="2.4" fill="#FFFFFF" opacity="0.65" transform="rotate(-25 146 317.5)"/>
+      </g>
+    </g>
+    </g><!-- /lumib-core -->
+
+    <!-- Gloves (in front of the torso) -->
+    <g id="lumib-gloves">
+      <g class="lumib-glove"><use href="#lumib-glove-shape" transform="translate(6 -8) translate(83 380) scale(1.08) translate(-83 -380)"/></g>
+      <g transform="translate(300 0) scale(-1 1)"><g class="lumib-glove"><use href="#lumib-glove-shape" transform="translate(6 -8) translate(83 380) scale(1.08) translate(-83 -380)"/></g></g>
+    </g>
+  </g>
+</svg>

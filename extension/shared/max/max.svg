@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-labelledby="max-title max-desc">
+  <title id="max-title">Max</title>
+  <desc id="max-desc">Max, a friendly light-bulb mascot: glowing bulb head with a dark face plate and a metal collar.</desc>
+  <!--
+    Max head + collar (floating mode). See README.md for the group map.
+    Bulb: centre (150,150), r=100. Face plate centre (150,177). Collar y 248-277.
+    Palette: #FFD54A warm yellow, #FF8A3D accent orange, #2B2D36 dark, #F4F6F8 light.
+    Pure vector: gradients + shapes, no raster data. One small blur filter (max-eye-blur) is used for the eye glow only.
+  -->
+  <defs>
+    <radialGradient id="max-grad-halo" gradientUnits="userSpaceOnUse" cx="150" cy="150" r="140">
+      <stop offset="0" stop-color="#FFD54A" stop-opacity="0.6"/>
+      <stop offset="0.7" stop-color="#FFD54A" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#FFD54A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="max-grad-glass" cx="0.42" cy="0.38" r="0.75">
+      <stop offset="0" stop-color="#FFF4B5"/>
+      <stop offset="0.5" stop-color="#FFDD5F"/>
+      <stop offset="0.85" stop-color="#FFCB3F"/>
+      <stop offset="1" stop-color="#F5AE2E"/>
+    </radialGradient>
+    <radialGradient id="max-grad-plate" cx="0.4" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#3B3236"/>
+      <stop offset="0.6" stop-color="#2B2D36"/>
+      <stop offset="1" stop-color="#1D1E26"/>
+    </radialGradient>
+    <linearGradient id="max-grad-collar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#B4B8C3"/>
+      <stop offset="0.4" stop-color="#8E92A0"/>
+      <stop offset="1" stop-color="#5E616E"/>
+    </linearGradient>
+    <filter id="max-eye-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.2"/></filter>
+  </defs>
+
+  <g id="max-root">
+
+    <!-- Aura: sits behind everything; animate independently -->
+    <g id="max-aura">
+      <circle id="max-aura-halo" cx="150" cy="150" r="140" fill="url(#max-grad-halo)"/>
+      <g id="max-aura-rays" fill="none" stroke="#FFD54A" stroke-width="6" stroke-linecap="round">
+        <line id="max-ray-top" x1="150" y1="32" x2="150" y2="14"/>
+        <line id="max-ray-tr" x1="225.9" y1="59.6" x2="236.2" y2="47.4"/>
+        <line id="max-ray-tl" x1="74.1" y1="59.6" x2="63.8" y2="47.4"/>
+        <line id="max-ray-r" x1="264" y1="119.4" x2="277.5" y2="115.8"/>
+        <line id="max-ray-l" x1="36" y1="119.4" x2="22.5" y2="115.8"/>
+      </g>
+    </g>
+
+    <!-- Bulb: glass globe with neck, filament, gloss and orange rim -->
+    <g id="max-bulb">
+      <path id="max-bulb-glass" fill="url(#max-grad-glass)"
+            d="M126 252 C126 244 106.9 240.6 100 236.6 A100 100 0 1 1 200 236.6 C193.1 240.6 174 244 174 252 Z"/>
+      <g id="max-bulb-filament" fill="none" stroke="#E39A2B" stroke-opacity="0.65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M138 250 V243 Q138 237 144 237"/>
+        <path d="M150 250 V237"/>
+        <path d="M162 250 V243 Q162 237 156 237"/>
+      </g>
+      <g id="max-bulb-highlights" fill="#FFFFFF">
+        <ellipse id="max-highlight-main" cx="205" cy="91" rx="19" ry="9.5" transform="rotate(31 205 91)" fill-opacity="0.8"/>
+        <circle cx="184" cy="79" r="3.2" fill-opacity="0.75"/>
+        <circle cx="193" cy="92" r="2.2" fill-opacity="0.65"/>
+        <ellipse cx="223" cy="124" rx="4.5" ry="12" transform="rotate(-8 223 124)" fill-opacity="0.55"/>
+      </g>
+      <path id="max-bulb-rim" fill="none" stroke="#E88E1C" stroke-width="3.5" stroke-linejoin="round"
+            d="M126 252 C126 244 106.9 240.6 100 236.6 A100 100 0 1 1 200 236.6 C193.1 240.6 174 244 174 252"/>
+    </g>
+
+    <!-- Face: plate, brows, eyes, mouth -->
+    <g id="max-face">
+      <g id="max-face-plate">
+        <path id="max-face-plate-shape" fill="url(#max-grad-plate)" stroke="#FFB84A" stroke-opacity="0.45" stroke-width="2"
+              d="M84 170 C84 138 108 124 150 124 C192 124 216 138 216 170 C216 208 192 230 150 230 C108 230 84 208 84 170 Z"/>
+        <ellipse id="max-face-plate-sheen" cx="120" cy="140" rx="30" ry="7.5" transform="rotate(-18 120 140)" fill="#FFFFFF" fill-opacity="0.12"/>
+      </g>
+
+      <!-- Brows and eyes are thin filled crescents (tapered ends), not plain strokes -->
+      <g id="max-eyebrows" fill="#8A5320" stroke="#8A5320" stroke-width="1" stroke-linejoin="round">
+        <path id="max-brow-left" d="M112 106 Q121 96 132 103 Q122 101 112 106 Z"/>
+        <path id="max-brow-right" d="M188 106 Q179 96 168 103 Q178 101 188 106 Z"/>
+      </g>
+
+      <g id="max-eyes" stroke-linejoin="round">
+        <g id="max-eye-left">
+          <path class="glow" d="M110 181 C110 156 138 156 138 181 C133 163.3 115 163.3 110 181 Z" fill="#FFCB45" stroke="#FFCB45" stroke-width="5" opacity="0.7" filter="url(#max-eye-blur)"/>
+          <path class="core" d="M110 181 C110 156 138 156 138 181 C133 163.3 115 163.3 110 181 Z" fill="#FFF6D6" stroke="#FFF6D6" stroke-width="1.6"/>
+        </g>
+        <g id="max-eye-right">
+          <path class="glow" d="M162 181 C162 156 190 156 190 181 C185 163.3 167 163.3 162 181 Z" fill="#FFCB45" stroke="#FFCB45" stroke-width="5" opacity="0.7" filter="url(#max-eye-blur)"/>
+          <path class="core" d="M162 181 C162 156 190 156 190 181 C185 163.3 167 163.3 162 181 Z" fill="#FFF6D6" stroke="#FFF6D6" stroke-width="1.6"/>
+        </g>
+      </g>
+
+      <!-- Mouth: none in the default (Happy) state. Un-hide a child to use it. -->
+      <g id="max-mouth" stroke-linecap="round" stroke-linejoin="round">
+        <path id="max-mouth-smile" display="none" fill="none" stroke="#FFF6C8" stroke-width="4"
+              d="M140 199 Q150 207 160 199"/>
+        <g id="max-mouth-open" display="none">
+          <path d="M134 194 Q150 197 166 194 Q164 214 150 214 Q136 214 134 194 Z" fill="#FFF6C8" stroke="#FFF6C8" stroke-width="2"/>
+          <path d="M142 208 Q150 203 158 208 Q154 214 150 214 Q146 214 142 208 Z" fill="#FF8A3D" stroke="none"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- Collar: metal screw base, drawn in front of the bulb neck -->
+    <g id="max-collar" stroke="#3B3D48" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+      <path id="max-collar-tip" fill="#5E616E" d="M140 269 H160 Q159 276 150 277 Q141 276 140 269 Z"/>
+      <path id="max-collar-body" fill="url(#max-grad-collar)" d="M124 256 H176 L173.5 268 Q150 274 126.5 268 Z"/>
+      <rect id="max-collar-ring" x="122" y="248" width="56" height="10" rx="5" fill="url(#max-grad-collar)"/>
+      <g id="max-collar-ridges" fill="none" stroke-width="1.4" stroke-opacity="0.7">
+        <path d="M126 263 Q150 267 174 263"/>
+      </g>
+      <path id="max-collar-highlight" fill="none" stroke="#F0F2F6" stroke-opacity="0.85" stroke-width="2" d="M128 252 H147"/>
+    </g>
+
+  </g>
+</svg>

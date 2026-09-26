@@ -1,0 +1,328 @@
+/*
+  Max intervention layer: the conversational CARD and its 5 reusable
+  compositions ("variants"). Separate file from max.css -- it does not
+  redeclare anything there except two small, ADDITIVE rules at the bottom
+  that only take effect while an intervention is actually showing (scoped
+  to the data-max-variant attribute this file introduces), so lamp-only
+  and body-only behaviour is byte-for-byte unchanged when no intervention
+  is active. max.svg / max-body.svg artwork is untouched; this only
+  positions/paints things around the EXISTING lamp and body layers.
+
+  Structure this file assumes (built by max-intervention.js -- not meant
+  to be hand-authored in a page):
+    .max-anchor
+    ├── .max-body      existing body layer (max.css, untouched)
+    ├── .max-card      NEW -- inserted between the two by max-intervention.js
+    └── .max           existing lamp (max.css, untouched)
+
+  Stacking: .max-body has z-index:-1 (max.css); .max-card and .max both
+  have the default z-index (auto), so within the anchor's stacking context
+  (.max-anchor sets isolation:isolate, also in max.css) they paint in
+  DOCUMENT ORDER: card first (behind), lamp last (in front). No z-index is
+  set here on .max, and none is needed -- Max's head is always the
+  topmost thing, purely because of where the card is inserted in the DOM.
+*/
+
+.max-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* NO z-index here -- that is the point. z-index:auto (this) and .max's
+     z-index:auto both paint at the stacking context's "level 0", where ties
+     are broken by DOM ORDER, and the card is inserted BEFORE the lamp (see
+     max-intervention.js, ensureCard). That is what puts the card above
+     .max-body's explicit -1 but still behind .max. An earlier version of
+     this file set z-index:1 here, which is POSITIVE -- a real level above
+     "0", i.e. above the lamp too. It never became visible as a bug only
+     because no variant's geometry happened to reach up into the head, but
+     it was wrong: the lamp must be able to win over the card whenever they
+     overlap, in every variant. Do not reintroduce an explicit z-index here. */
+  width: 232px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e3e5eb;
+  box-shadow: 0 10px 30px rgba(43, 45, 54, 0.14), 0 2px 8px rgba(43, 45, 54, 0.08);
+  font: 13px/1.45 system-ui, sans-serif;
+  color: #2b2d36;
+  pointer-events: none; /* re-enabled only once open, below */
+
+  /* Position is set by max-intervention.js as --max-card-tx/-ty (local px,
+     relative to the anchor, same convention as --max-x/-y on the anchor
+     itself). --max-card-nudge is a small pull-toward-Max offset for the
+     CLOSED state only, so the entrance reads as "growing out of Max"
+     rather than a plain fade; it is 0 until a side is resolved. */
+  --max-card-nudge: 0px;
+  transform-origin: 0 0;
+  transform: translate(calc(var(--max-card-tx, 0px) + var(--max-card-nudge)), var(--max-card-ty, 0px)) scale(0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 260ms cubic-bezier(0.3, 0.55, 0.25, 1), opacity 200ms ease-out, visibility 0s linear 260ms;
+}
+
+.max-card[data-max-card-side='right'] {
+  --max-card-nudge: -10px;
+} /* card is right of Max: start 10px closer (left) */
+.max-card[data-max-card-side='left'] {
+  --max-card-nudge: 10px;
+} /* card is left of Max: start 10px closer (right) */
+
+.max-card[data-max-card-open='true'] {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(var(--max-card-tx, 0px), var(--max-card-ty, 0px)) scale(1);
+  transition: transform 300ms cubic-bezier(0.3, 0.55, 0.25, 1), opacity 220ms ease-out, visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .max-card,
+  .max-card[data-max-card-open='true'] {
+    transition: none;
+  }
+}
+
+/* Small tail on whichever edge faces Max (data-max-card-side is set from
+   the ACTUAL resolved position, including any viewport-edge flip, so the
+   tail always points the right way). A rotated square with two adjacent
+   sides made transparent, so it reads as a triangle without extra markup. */
+.max-card::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 1px solid #e3e5eb;
+  transform: rotate(45deg);
+}
+.max-card[data-max-card-side='right']::before {
+  left: -8px;
+  border-right-color: transparent;
+  border-top-color: transparent;
+}
+.max-card[data-max-card-side='left']::before {
+  right: -8px;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.max-card-line {
+  margin: 0 0 6px;
+}
+.max-card-line:last-of-type {
+  margin-bottom: 10px;
+}
+.max-card-line--title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.max-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.max-card-btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid #d5d8df;
+  background: #f4f6f8;
+  color: #2b2d36;
+  cursor: pointer;
+}
+.max-card-btn:hover {
+  background: #eceef2;
+}
+.max-card-btn--primary {
+  background: #2b2d36;
+  color: #fff;
+  border-color: #2b2d36;
+}
+.max-card-btn--primary:hover {
+  background: #3b3d48;
+}
+
+/* Variant: FULL BODY -- SIDE LEAN.                                       */
+/*                                                                        */
+/* Additive only: these rules match ONLY while data-max-variant is       */
+/* present (set by max-intervention.js), and the lean rule further only  */
+/* while data-max-body is "active" or "emerging" (an EXISTING max.css   */
+/* state, unmodified) -- never during "returning" or "hidden", so the     */
+/* lean relaxes back to upright automatically as the body retracts,       */
+/* purely by no longer matching, no JS timing needed. Everything reverts  */
+/* to max.css's own .max-body rule the instant data-max-variant is     */
+/* removed (closeMaxIntervention does this before calling returnMax).   */
+/*                                                                        */
+/* The pivot (50% 83.3% = viewBox y=250 of 300) is the SAME point         */
+/* max.css already uses as the body's "attached to the collar" origin    */
+/* (#maxb-core's transform-origin is 150px 250px), so leaning does not   */
+/* reopen the collar-to-torso gap that the emergence system depends on.   */
+/* Specificity: 4 class/attribute selectors vs. max.css's plain          */
+/* ".max-body" (1), so this wins regardless of file load order, and      */
+/* .max (the lamp) is never touched -- the head stays exactly where the  */
+/* float-lock system (max.css) already puts it. */
+.max-anchor[data-max-variant] > .max-body {
+  transition: transform 400ms ease;
+}
+.max-anchor[data-max-variant='full-lean'][data-max-body='active'] > .max-body,
+.max-anchor[data-max-variant='full-lean'][data-max-body='emerging'] > .max-body {
+  transform-origin: 50% 83.3%;
+  transform: translate(-50%, -50%) rotate(9deg);
+}
+.max-anchor[data-max-variant='full-lean'][data-max-card-side='left'][data-max-body='active'] > .max-body,
+.max-anchor[data-max-variant='full-lean'][data-max-card-side='left'][data-max-body='emerging'] > .max-body {
+  transform: translate(-50%, -50%) rotate(-9deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .max-anchor[data-max-variant] > .max-body {
+    transition: none;
+  }
+}
+
+/* Intervention micro-animation: makes Max feel alive while a card is open, */
+/* without touching max.svg, max-body.svg, the emergence mechanics, the    */
+/* card's geometry/occlusion, or lamp-only idle behaviour.                   */
+/*                                                                           */
+/* Everything below is scoped to [data-max-variant] (only set while an      */
+/* intervention is showing) AND [data-max-body="active"] (only once the    */
+/* body has fully settled -- never mid emerge/return, so it cannot fight    */
+/* those transitions), inside @media (prefers-reduced-motion: no-preference) */
+/* only. With no intervention open, or under reduced motion, none of this   */
+/* matches and the elements below sit exactly on max.css's own rules,       */
+/* unchanged.                                                                */
+/*                                                                           */
+/* The lamp/head gets NOTHING here on purpose: it is already correctly      */
+/* locked (max.css's float-lock), and any independent head motion would    */
+/* risk exactly the "detached head" look that was fixed twice already.      */
+/*                                                                           */
+/* Reused pivots (nothing new declared): #maxb-core already pivots at      */
+/* 150px 250px (near the neck, view-box units) for its own emerge/hide      */
+/* transform; .maxb-arm/.maxb-glove already pivot at 106px 292px (the     */
+/* shoulder) unconditionally, from max.css. Animating only `transform` on   */
+/* these elements while "active" temporarily supersedes max.css's static   */
+/* transform: none for that property, and hands back to it (and to the     */
+/* transition-driven hidden pose) the instant the state stops matching --   */
+/* e.g. the moment data-max-body leaves "active" for "returning". */
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Body: a very small, slow lean/settle sway on the TRUNK ONLY
+        (#maxb-core = torso+legs, one attached piece -- see max-body.svg),
+        pivoting at the same point the trunk already uses to stay attached
+        to the collar, so it can never look like it is sliding independently
+        of the head. ~1deg is "1-2%" of a full turn, at most. Excluded for
+        full-lean: that pose's rotation must stay perfectly stable, no wobble. */
+  .max-anchor[data-max-variant]:not([data-max-variant='full-lean'])[data-max-body='active'] .max-body #maxb-core {
+    animation: max-core-idle 3.6s ease-in-out infinite;
+  }
+
+  /* 2. Arms: a continuous, very small "natural stance" sway for full-behind
+        (both arms' visible upper portion, per the fixed geometry -- see
+        max-intervention.js). Different duration + reverse direction on the
+        two sides so they read as independent, not a mirrored robotic loop. */
+  .max-anchor[data-max-variant='full-behind'][data-max-body='active'] .max-body #maxb-arms > .maxb-arm {
+    animation: max-arm-idle 3.2s ease-in-out infinite;
+  }
+  .max-anchor[data-max-variant='full-behind'][data-max-body='active'] .max-body #maxb-arms > g > .maxb-arm {
+    animation: max-arm-idle 3.8s ease-in-out infinite reverse;
+  }
+
+}
+
+@keyframes max-core-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes max-arm-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-2deg);
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Hands that hold the card (pose pass)                                     */
+/*                                                                          */
+/* .max-hands is a NEW sibling layer, built by max-intervention.js        */
+/* (ensureHandsLayer): inserted between .max-card and .max, so -- same    */
+/* DOM-order technique as the card itself, still no z-index anywhere --     */
+/* it paints ABOVE the card but still below the lamp. It holds CLONES of    */
+/* the existing .maxb-arm + .maxb-glove pairs (cloneNode, not redrawn;    */
+/* their <use href="#maxb-arm-shape"/"#maxb-glove-shape"> resolve against */
+/* the untouched <defs> still in .max-body's own svg), each pair wrapped   */
+/* in one new .max-limb-pose group so a single transform moves both       */
+/* rigidly together (see max-intervention.js, cloneLimb/armPoseTransform). */
+/* Box sizing matches .max-body exactly (same --max-size box, same        */
+/* centring), so its viewBox coordinates line up 1:1 with everything else. */
+.max-hands {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--max-size);
+  height: var(--max-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.max-hands > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* The POSE transform (armPoseTransform's rotate/scale/rotate, plus the
+   wiggle) is applied to THIS wrapper, not to the arm/glove individually --
+   that is what keeps them rigidly connected to each other. transform-box/
+   -origin are NOT inherited from max.css's rule for the ORIGINAL .maxb-
+   arm/.maxb-glove (that rule is scoped ".max-body .maxb-arm" etc., which
+   a clone living in .max-hands does not match) -- redeclared here, same
+   shoulder pivot, so max-intervention.js's transform lands correctly. */
+.max-hands .max-limb-pose {
+  transform-box: view-box;
+  transform-origin: 106px 292px; /* shoulder -- same pivot as the original */
+}
+
+/* The BACK-layer originals of whichever arm+glove pair is being held are
+   hidden, so they do not double-render behind their own front clone (which
+   is what is actually visible resting on the card). Uses the same
+   structural left/right selectors already used elsewhere in this file --
+   no new classes on the SVG -- and data-max-hold-left/-right, set by
+   positionHands() only for the side(s) it actually promoted this time. */
+/* `transition: none` here is required, not cosmetic: max.css's own active-
+   state rule for .maxb-arm/.maxb-glove ALSO sets `transition: ...,
+   opacity 200ms linear 750ms` (for the emerge reveal), and that transition
+   property keeps applying to THIS opacity change too unless overridden --
+   without this, the 750ms delay baked in for a completely different
+   purpose would make the back-layer originals visibly fade out ~950ms
+   late, alongside their own already-in-place front clone (a brief double
+   image). */
+.max-anchor[data-max-hold-left='true'] .max-body #maxb-arms > .maxb-arm,
+.max-anchor[data-max-hold-left='true'] .max-body #maxb-gloves > .maxb-glove {
+  opacity: 0;
+  transition: none;
+}
+.max-anchor[data-max-hold-right='true'] .max-body #maxb-arms > g > .maxb-arm,
+.max-anchor[data-max-hold-right='true'] .max-body #maxb-gloves > g > .maxb-glove {
+  opacity: 0;
+  transition: none;
+}
+
+/* Reduced motion needs NO extra rule here: max-intervention.js's own
+   wiggle() already checks prefers-reduced-motion itself (matching every
+   other reduced-motion path in this file/max.css) and, when it matches,
+   sets the hold/raise pose's `transform` directly via inline style instead
+   of starting a WAAPI loop -- so the hand still visibly rests on/holds the
+   card, statically, exactly as "no hand animation" (not "no hand pose")
+   requires; only the motion is skipped, never the pose itself. */

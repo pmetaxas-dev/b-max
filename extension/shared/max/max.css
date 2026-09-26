@@ -1,0 +1,323 @@
+/*
+  Max idle animation (float, aura pulse, blink), talking look, the small
+  lamp size (~45px visible bulb) and the full-body emergence layer.
+
+  Works on an INLINE copy of max.svg only (CSS cannot reach into <img>).
+  Idle motion is scoped to `.max-idle`, which max.js adds to the <svg>.
+  The artwork is never edited; this file only targets its existing ids.
+
+  Motion units are SVG user units (the viewBox is 300 wide), so distances
+  scale with the rendered size: 8 units is ~1.8px at the 67.5px lamp box.
+  Override --max-float-distance on the <svg> to tune it.
+*/
+
+/* Lamp size + position, and the full-body layer                      */
+/*                                                                    */
+/* Markup:                                                            */
+/*   .max-anchor                     POSITION only (zero-size point) */
+/*   ├── .max-body   > <svg>         the body, behind the lamp       */
+/*   └── .max        > <svg>         the lamp: always there, ~45px   */
+/*                                                                    */
+/*  - .max-anchor is a zero-size point that owns POSITION. It marks  */
+/*    Max's centre. Drag/persistence code only sets --max-x and     */
+/*    --max-y on it (or replaces left/top). Its parent must be       */
+/*    positioned (use position:fixed for the real overlay).           */
+/*  - .max is the lamp and is Max's permanent form AND her head. It */
+/*    never grows and never hides. It is centred on the anchor.       */
+/*  - .max-body is the neck-down body. It is the SAME BOX as .max   */
+/*    (same size, same centre, same 300-unit viewBox), so it always   */
+/*    hangs from the lamp's collar and follows the anchor for free.   */
+/*  - The lamp size is the SVG BOX (67.5px). The visible bulb is 2/3  */
+/*    of the box (its circle is 200 of 300 viewBox units) = 45px; the */
+/*    aura fills the margin.                                          */
+
+.max-anchor {
+  position: absolute;
+  left: var(--max-x, 0px);
+  top: var(--max-y, 0px);
+  width: 0;
+  height: 0;
+  /* Own stacking context: keeps Max one unit in the page's stacking order
+     and lets the body sit behind the lamp (z-index: -1) without falling
+     behind the page. */
+  isolation: isolate;
+
+  --max-size: 67.5px;   /* lamp SVG box; visible bulb = 45px */
+
+  /* Viewport safety (for the future drag/clamp code; nothing uses these yet).
+     How far the ACTIVE body reaches from the anchor, in px. The body is
+     glued to the lamp, so clamping means keeping the ANCHOR at least this
+     far from the viewport edges (the lamp's own aura is wider than the body
+     sideways, so only "down" really matters). */
+  --max-body-reach-down: calc(var(--max-size) * 1.15);    /* shadow bottom: y=495 of 300 -> (495-150)/300 */
+  --max-body-reach-x: calc(var(--max-size) * 0.3);        /* gloves/shoes, each side */
+}
+
+.max {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--max-size);
+  height: var(--max-size);
+  transform: translate(-50%, -50%);
+  /* Draggable (enableMaxDrag, max.js): grab affordance, and touch-action:
+     none so a touch-drag moves Max instead of scrolling the page. Only
+     ever a visual/input hint -- max.js itself still refuses to start a
+     drag while the body is out (data-max-body != "hidden"). */
+  cursor: grab;
+  touch-action: none;
+}
+
+.max-anchor[data-max-dragging] .max {
+  cursor: grabbing;
+}
+
+.max > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Full-body emergence                                                */
+/*                                                                    */
+/* The body layer is painted BEHIND the lamp (z-index: -1). The lamp's */
+/* glass and collar are opaque, so anything that sits inside the lamp */
+/* silhouette is simply not visible: that is what "hidden inside the  */
+/* lamp" is. Nothing is faded in as a whole.                          */
+/*                                                                    */
+/* max.js sets data-max-body on the ANCHOR:                         */
+/*   hidden -> emerging -> active -> returning -> hidden              */
+/* hidden/returning aim at the HIDDEN pose, active/emerging at the    */
+/* ACTIVE pose; CSS transitions do the motion, so reversing halfway   */
+/* simply reverses from where the parts are.                          */
+/*                                                                    */
+/* HIDDEN pose: the core (torso, legs tucked behind it) is scaled to  */
+/* 0.6 with its centre exactly on the lamp centre (150,150 in viewBox  */
+/* units), fully inside the glass. Arms, gloves and shadow are scaled  */
+/* to nothing and transparent.                                        */
+/* ACTIVE pose: every part at its drawn place.                        */
+/*                                                                    */
+/* Emerge order: the core slides down out of the collar (attached),   */
+/* the legs unfold from beneath the torso, the arms unfold from the   */
+/* shoulders, the shadow settles. Return is the same in reverse.      */
+/* Units in transform values are viewBox units (transform-box:        */
+/* view-box).                                                         */
+
+.max-body {
+  --max-body-return-ms: 1200ms;   /* longest return: last part finishes, THEN visibility drops */
+  --max-body-ease: cubic-bezier(0.3, 0.55, 0.25, 1);      /* soft ease-out, no overshoot */
+  --max-body-ease-back: cubic-bezier(0.45, 0, 0.3, 1);    /* gentle ease-in-out */
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  width: var(--max-size);
+  height: var(--max-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear var(--max-body-return-ms);
+}
+
+.max-body > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.max-body #maxb-core,
+.max-body #maxb-shadow,
+.max-body .maxb-arm,
+.max-body .maxb-glove {
+  transform-box: view-box;
+}
+
+/* HIDDEN pose + RETURN timing (arms fold in first, the core goes back    */
+/* up into the collar last)                                               */
+/*                                                                        */
+/* #maxb-core is the trunk: the torso, with the legs+shoes tucked behind */
+/* it (they are children of the core, so they travel with it). It scales  */
+/* about a point just behind the collar (150,250) and is shifted up so    */
+/* its centre lands on the lamp centre (150,150) at 0.6 scale. Because    */
+/* the origin is at the top, the core's top edge stays inside the lamp    */
+/* silhouette the whole time: it slides down out of the collar, attached, */
+/* and never floats free.                                                 */
+.max-body #maxb-core {
+  transform-origin: 150px 250px;
+  transform: translateY(-140.5px) scale(0.6);
+  transition: transform 800ms var(--max-body-ease-back) 400ms;
+}
+/* Legs+shoes: folded up behind the torso (fully inside its silhouette,   */
+/* so hidden by it), then they unfold downward from the torso's bottom.   */
+.max-body #maxb-legs {
+  transform-box: view-box;
+  transform-origin: 150px 372px;
+  transform: translateY(-100px) scale(0.5);
+  transition: transform 650ms var(--max-body-ease-back) 100ms;
+}
+.max-body .maxb-arm,
+.max-body .maxb-glove {
+  transform-origin: 106px 292px;                  /* shoulder */
+  transform: scale(0.05);
+  opacity: 0;
+  transition: transform 500ms var(--max-body-ease-back), opacity 150ms linear 350ms;
+}
+.max-body #maxb-shadow {
+  opacity: 0;
+  transition: opacity 250ms linear;
+}
+
+/* ACTIVE pose + EMERGE timing */
+.max-anchor[data-max-body="active"] > .max-body,
+.max-anchor[data-max-body="emerging"] > .max-body {
+  visibility: visible;
+  transition: visibility 0s;
+}
+.max-anchor[data-max-body="active"] .max-body #maxb-core,
+.max-anchor[data-max-body="emerging"] .max-body #maxb-core {
+  transform: none;
+  transition: transform 800ms var(--max-body-ease);
+}
+.max-anchor[data-max-body="active"] .max-body #maxb-legs,
+.max-anchor[data-max-body="emerging"] .max-body #maxb-legs {
+  transform: none;
+  transition: transform 700ms var(--max-body-ease) 450ms;
+}
+.max-anchor[data-max-body="active"] .max-body .maxb-arm,
+.max-anchor[data-max-body="active"] .max-body .maxb-glove,
+.max-anchor[data-max-body="emerging"] .max-body .maxb-arm,
+.max-anchor[data-max-body="emerging"] .max-body .maxb-glove {
+  transform: none;
+  opacity: 1;
+  transition: transform 600ms var(--max-body-ease) 750ms, opacity 200ms linear 750ms;
+}
+.max-anchor[data-max-body="active"] .max-body #maxb-shadow,
+.max-anchor[data-max-body="emerging"] .max-body #maxb-shadow {
+  opacity: 1;
+  transition: opacity 350ms linear 1000ms;
+}
+
+/* Reduced motion: the poses still switch, just without animating. */
+@media (prefers-reduced-motion: reduce) {
+  .max-body,
+  .max-body * {
+    transition: none !important;
+  }
+}
+
+.max-idle {
+  --max-float-distance: 8px;
+  --max-float-duration: 5.2s;
+  --max-aura-duration: 4.6s;
+  --max-blink-duration: 190ms;
+}
+
+/* Eye blink pivots on the eye baseline (feet of the ∩ arcs, y=181). */
+.max-idle #max-eyes {
+  transform-box: view-box;
+  transform-origin: 150px 181px;
+}
+
+/* The halo scales around its own centre (the bulb centre). */
+.max-idle #max-aura-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Motion only when the user has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Gentle hover: whole head + aura + collar move together. */
+  .max-idle #max-root {
+    animation: max-float var(--max-float-duration) ease-in-out infinite;
+  }
+
+  /* 2. Breathing glow: halo swells slightly, rays brighten with it.
+        The bulb glass is not animated, so it never changes size. */
+  .max-idle #max-aura-halo {
+    animation: max-halo var(--max-aura-duration) ease-in-out infinite;
+  }
+  .max-idle #max-aura-rays {
+    animation: max-rays var(--max-aura-duration) ease-in-out infinite;
+  }
+
+  /* 3. Blink: played once per class toggle by max.js (random timing). */
+  .max-idle #max-eyes.max-blink {
+    animation: max-blink var(--max-blink-duration) ease-in-out 1;
+  }
+}
+
+/* Lock the lamp to the body while it is emerged.                     */
+/*                                                                    */
+/* #max-root's float (above) moves the WHOLE lamp SVG group (bulb,   */
+/* aura, collar) up and down inside its own box; it never touches the */
+/* box itself, so the anchor and .max-body (which is only ever       */
+/* positioned relative to the anchor) do not move with it. With the   */
+/* body out, that independent float reads as the head drifting loose  */
+/* of the collar rather than as part of the same character, so it is  */
+/* turned off for as long as the body is not fully retracted          */
+/* (emerging, active AND returning, not just active: the collar must  */
+/* stay put for the whole time the body is visibly attached to it,    */
+/* including mid-emergence and mid-return, not only once "active" is  */
+/* reached). It resumes the moment the body is hidden again.          */
+/*                                                                    */
+/* This reuses the existing float animation and the existing          */
+/* data-max-body state on the anchor (set by max.js); it only turns */
+/* the animation off, so #max-root settles at rest (no jump: the     */
+/* float's own range is a few px). Aura breathing, blink and talking  */
+/* are separate elements/animations and are untouched, so they keep   */
+/* running in every state. */
+@media (prefers-reduced-motion: no-preference) {
+  .max-anchor[data-max-body="emerging"] .max-idle #max-root,
+  .max-anchor[data-max-body="active"] .max-idle #max-root,
+  .max-anchor[data-max-body="returning"] .max-idle #max-root {
+    animation: none;
+  }
+}
+
+@keyframes max-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(calc(var(--max-float-distance) * -1)); }
+}
+
+@keyframes max-halo {
+  0%, 100% { transform: scale(1);    opacity: 0.8; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes max-rays {
+  0%, 100% { opacity: 0.65; }
+  50%      { opacity: 1; }
+}
+
+@keyframes max-blink {
+  0%   { transform: scaleY(1); }
+  45%  { transform: scaleY(0.1); }
+  60%  { transform: scaleY(0.1); }
+  100% { transform: scaleY(1); }
+}
+
+/* Talking (layered on idle; max.js adds .max-talking to the <svg>)  */
+/*                                                                    */
+/* The lamp itself speaks. CSS only provides the STATIC look; max.js  */
+/* drives the syllable/sway/aura motion (Web Animations) because a     */
+/* natural rhythm needs per-syllable variation.                        */
+/* Uses the existing mouth variant #max-mouth-open, which the SVG    */
+/* ships hidden (display="none"); CSS overrides it only while talking. */
+/* Closed = invisible, which is exactly the approved Happy face.       */
+
+.max-idle.max-talking #max-mouth-open {
+  display: inline;
+  opacity: 0;                        /* closed; max.js animates it open/closed */
+  transform-box: view-box;
+  transform-origin: 150px 195px;     /* top edge of the mouth: it drops like a jaw */
+}
+
+/* Reduced motion: no animation. A static half-open mouth signals "talking". */
+@media (prefers-reduced-motion: reduce) {
+  .max-idle.max-talking #max-mouth-open {
+    opacity: 1;
+    transform: scale(0.95, 0.55);
+  }
+}

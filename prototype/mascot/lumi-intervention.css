@@ -1,0 +1,328 @@
+/*
+  Lumi intervention layer: the conversational CARD and its 5 reusable
+  compositions ("variants"). Separate file from lumi.css -- it does not
+  redeclare anything there except two small, ADDITIVE rules at the bottom
+  that only take effect while an intervention is actually showing (scoped
+  to the data-lumi-variant attribute this file introduces), so lamp-only
+  and body-only behaviour is byte-for-byte unchanged when no intervention
+  is active. lumi.svg / lumi-body.svg artwork is untouched; this only
+  positions/paints things around the EXISTING lamp and body layers.
+
+  Structure this file assumes (built by lumi-intervention.js -- not meant
+  to be hand-authored in a page):
+    .lumi-anchor
+    ├── .lumi-body      existing body layer (lumi.css, untouched)
+    ├── .lumi-card      NEW -- inserted between the two by lumi-intervention.js
+    └── .lumi           existing lamp (lumi.css, untouched)
+
+  Stacking: .lumi-body has z-index:-1 (lumi.css); .lumi-card and .lumi both
+  have the default z-index (auto), so within the anchor's stacking context
+  (.lumi-anchor sets isolation:isolate, also in lumi.css) they paint in
+  DOCUMENT ORDER: card first (behind), lamp last (in front). No z-index is
+  set here on .lumi, and none is needed -- Lumi's head is always the
+  topmost thing, purely because of where the card is inserted in the DOM.
+*/
+
+.lumi-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* NO z-index here -- that is the point. z-index:auto (this) and .lumi's
+     z-index:auto both paint at the stacking context's "level 0", where ties
+     are broken by DOM ORDER, and the card is inserted BEFORE the lamp (see
+     lumi-intervention.js, ensureCard). That is what puts the card above
+     .lumi-body's explicit -1 but still behind .lumi. An earlier version of
+     this file set z-index:1 here, which is POSITIVE -- a real level above
+     "0", i.e. above the lamp too. It never became visible as a bug only
+     because no variant's geometry happened to reach up into the head, but
+     it was wrong: the lamp must be able to win over the card whenever they
+     overlap, in every variant. Do not reintroduce an explicit z-index here. */
+  width: 232px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #e3e5eb;
+  box-shadow: 0 10px 30px rgba(43, 45, 54, 0.14), 0 2px 8px rgba(43, 45, 54, 0.08);
+  font: 13px/1.45 system-ui, sans-serif;
+  color: #2b2d36;
+  pointer-events: none; /* re-enabled only once open, below */
+
+  /* Position is set by lumi-intervention.js as --lumi-card-tx/-ty (local px,
+     relative to the anchor, same convention as --lumi-x/-y on the anchor
+     itself). --lumi-card-nudge is a small pull-toward-Lumi offset for the
+     CLOSED state only, so the entrance reads as "growing out of Lumi"
+     rather than a plain fade; it is 0 until a side is resolved. */
+  --lumi-card-nudge: 0px;
+  transform-origin: 0 0;
+  transform: translate(calc(var(--lumi-card-tx, 0px) + var(--lumi-card-nudge)), var(--lumi-card-ty, 0px)) scale(0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 260ms cubic-bezier(0.3, 0.55, 0.25, 1), opacity 200ms ease-out, visibility 0s linear 260ms;
+}
+
+.lumi-card[data-lumi-card-side='right'] {
+  --lumi-card-nudge: -10px;
+} /* card is right of Lumi: start 10px closer (left) */
+.lumi-card[data-lumi-card-side='left'] {
+  --lumi-card-nudge: 10px;
+} /* card is left of Lumi: start 10px closer (right) */
+
+.lumi-card[data-lumi-card-open='true'] {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(var(--lumi-card-tx, 0px), var(--lumi-card-ty, 0px)) scale(1);
+  transition: transform 300ms cubic-bezier(0.3, 0.55, 0.25, 1), opacity 220ms ease-out, visibility 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumi-card,
+  .lumi-card[data-lumi-card-open='true'] {
+    transition: none;
+  }
+}
+
+/* Small tail on whichever edge faces Lumi (data-lumi-card-side is set from
+   the ACTUAL resolved position, including any viewport-edge flip, so the
+   tail always points the right way). A rotated square with two adjacent
+   sides made transparent, so it reads as a triangle without extra markup. */
+.lumi-card::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 1px solid #e3e5eb;
+  transform: rotate(45deg);
+}
+.lumi-card[data-lumi-card-side='right']::before {
+  left: -8px;
+  border-right-color: transparent;
+  border-top-color: transparent;
+}
+.lumi-card[data-lumi-card-side='left']::before {
+  right: -8px;
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.lumi-card-line {
+  margin: 0 0 6px;
+}
+.lumi-card-line:last-of-type {
+  margin-bottom: 10px;
+}
+.lumi-card-line--title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.lumi-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lumi-card-btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid #d5d8df;
+  background: #f4f6f8;
+  color: #2b2d36;
+  cursor: pointer;
+}
+.lumi-card-btn:hover {
+  background: #eceef2;
+}
+.lumi-card-btn--primary {
+  background: #2b2d36;
+  color: #fff;
+  border-color: #2b2d36;
+}
+.lumi-card-btn--primary:hover {
+  background: #3b3d48;
+}
+
+/* Variant: FULL BODY -- SIDE LEAN.                                       */
+/*                                                                        */
+/* Additive only: these rules match ONLY while data-lumi-variant is       */
+/* present (set by lumi-intervention.js), and the lean rule further only  */
+/* while data-lumi-body is "active" or "emerging" (an EXISTING lumi.css   */
+/* state, unmodified) -- never during "returning" or "hidden", so the     */
+/* lean relaxes back to upright automatically as the body retracts,       */
+/* purely by no longer matching, no JS timing needed. Everything reverts  */
+/* to lumi.css's own .lumi-body rule the instant data-lumi-variant is     */
+/* removed (closeLumiIntervention does this before calling returnLumi).   */
+/*                                                                        */
+/* The pivot (50% 83.3% = viewBox y=250 of 300) is the SAME point         */
+/* lumi.css already uses as the body's "attached to the collar" origin    */
+/* (#lumib-core's transform-origin is 150px 250px), so leaning does not   */
+/* reopen the collar-to-torso gap that the emergence system depends on.   */
+/* Specificity: 4 class/attribute selectors vs. lumi.css's plain          */
+/* ".lumi-body" (1), so this wins regardless of file load order, and      */
+/* .lumi (the lamp) is never touched -- the head stays exactly where the  */
+/* float-lock system (lumi.css) already puts it. */
+.lumi-anchor[data-lumi-variant] > .lumi-body {
+  transition: transform 400ms ease;
+}
+.lumi-anchor[data-lumi-variant='full-lean'][data-lumi-body='active'] > .lumi-body,
+.lumi-anchor[data-lumi-variant='full-lean'][data-lumi-body='emerging'] > .lumi-body {
+  transform-origin: 50% 83.3%;
+  transform: translate(-50%, -50%) rotate(9deg);
+}
+.lumi-anchor[data-lumi-variant='full-lean'][data-lumi-card-side='left'][data-lumi-body='active'] > .lumi-body,
+.lumi-anchor[data-lumi-variant='full-lean'][data-lumi-card-side='left'][data-lumi-body='emerging'] > .lumi-body {
+  transform: translate(-50%, -50%) rotate(-9deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lumi-anchor[data-lumi-variant] > .lumi-body {
+    transition: none;
+  }
+}
+
+/* Intervention micro-animation: makes Lumi feel alive while a card is open, */
+/* without touching lumi.svg, lumi-body.svg, the emergence mechanics, the    */
+/* card's geometry/occlusion, or lamp-only idle behaviour.                   */
+/*                                                                           */
+/* Everything below is scoped to [data-lumi-variant] (only set while an      */
+/* intervention is showing) AND [data-lumi-body="active"] (only once the    */
+/* body has fully settled -- never mid emerge/return, so it cannot fight    */
+/* those transitions), inside @media (prefers-reduced-motion: no-preference) */
+/* only. With no intervention open, or under reduced motion, none of this   */
+/* matches and the elements below sit exactly on lumi.css's own rules,       */
+/* unchanged.                                                                */
+/*                                                                           */
+/* The lamp/head gets NOTHING here on purpose: it is already correctly      */
+/* locked (lumi.css's float-lock), and any independent head motion would    */
+/* risk exactly the "detached head" look that was fixed twice already.      */
+/*                                                                           */
+/* Reused pivots (nothing new declared): #lumib-core already pivots at      */
+/* 150px 250px (near the neck, view-box units) for its own emerge/hide      */
+/* transform; .lumib-arm/.lumib-glove already pivot at 106px 292px (the     */
+/* shoulder) unconditionally, from lumi.css. Animating only `transform` on   */
+/* these elements while "active" temporarily supersedes lumi.css's static   */
+/* transform: none for that property, and hands back to it (and to the     */
+/* transition-driven hidden pose) the instant the state stops matching --   */
+/* e.g. the moment data-lumi-body leaves "active" for "returning". */
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Body: a very small, slow lean/settle sway on the TRUNK ONLY
+        (#lumib-core = torso+legs, one attached piece -- see lumi-body.svg),
+        pivoting at the same point the trunk already uses to stay attached
+        to the collar, so it can never look like it is sliding independently
+        of the head. ~1deg is "1-2%" of a full turn, at most. Excluded for
+        full-lean: that pose's rotation must stay perfectly stable, no wobble. */
+  .lumi-anchor[data-lumi-variant]:not([data-lumi-variant='full-lean'])[data-lumi-body='active'] .lumi-body #lumib-core {
+    animation: lumi-core-idle 3.6s ease-in-out infinite;
+  }
+
+  /* 2. Arms: a continuous, very small "natural stance" sway for full-behind
+        (both arms' visible upper portion, per the fixed geometry -- see
+        lumi-intervention.js). Different duration + reverse direction on the
+        two sides so they read as independent, not a mirrored robotic loop. */
+  .lumi-anchor[data-lumi-variant='full-behind'][data-lumi-body='active'] .lumi-body #lumib-arms > .lumib-arm {
+    animation: lumi-arm-idle 3.2s ease-in-out infinite;
+  }
+  .lumi-anchor[data-lumi-variant='full-behind'][data-lumi-body='active'] .lumi-body #lumib-arms > g > .lumib-arm {
+    animation: lumi-arm-idle 3.8s ease-in-out infinite reverse;
+  }
+
+}
+
+@keyframes lumi-core-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+
+@keyframes lumi-arm-idle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-2deg);
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* Hands that hold the card (pose pass)                                     */
+/*                                                                          */
+/* .lumi-hands is a NEW sibling layer, built by lumi-intervention.js        */
+/* (ensureHandsLayer): inserted between .lumi-card and .lumi, so -- same    */
+/* DOM-order technique as the card itself, still no z-index anywhere --     */
+/* it paints ABOVE the card but still below the lamp. It holds CLONES of    */
+/* the existing .lumib-arm + .lumib-glove pairs (cloneNode, not redrawn;    */
+/* their <use href="#lumib-arm-shape"/"#lumib-glove-shape"> resolve against */
+/* the untouched <defs> still in .lumi-body's own svg), each pair wrapped   */
+/* in one new .lumi-limb-pose group so a single transform moves both       */
+/* rigidly together (see lumi-intervention.js, cloneLimb/armPoseTransform). */
+/* Box sizing matches .lumi-body exactly (same --lumi-size box, same        */
+/* centring), so its viewBox coordinates line up 1:1 with everything else. */
+.lumi-hands {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--lumi-size);
+  height: var(--lumi-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.lumi-hands > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* The POSE transform (armPoseTransform's rotate/scale/rotate, plus the
+   wiggle) is applied to THIS wrapper, not to the arm/glove individually --
+   that is what keeps them rigidly connected to each other. transform-box/
+   -origin are NOT inherited from lumi.css's rule for the ORIGINAL .lumib-
+   arm/.lumib-glove (that rule is scoped ".lumi-body .lumib-arm" etc., which
+   a clone living in .lumi-hands does not match) -- redeclared here, same
+   shoulder pivot, so lumi-intervention.js's transform lands correctly. */
+.lumi-hands .lumi-limb-pose {
+  transform-box: view-box;
+  transform-origin: 106px 292px; /* shoulder -- same pivot as the original */
+}
+
+/* The BACK-layer originals of whichever arm+glove pair is being held are
+   hidden, so they do not double-render behind their own front clone (which
+   is what is actually visible resting on the card). Uses the same
+   structural left/right selectors already used elsewhere in this file --
+   no new classes on the SVG -- and data-lumi-hold-left/-right, set by
+   positionHands() only for the side(s) it actually promoted this time. */
+/* `transition: none` here is required, not cosmetic: lumi.css's own active-
+   state rule for .lumib-arm/.lumib-glove ALSO sets `transition: ...,
+   opacity 200ms linear 750ms` (for the emerge reveal), and that transition
+   property keeps applying to THIS opacity change too unless overridden --
+   without this, the 750ms delay baked in for a completely different
+   purpose would make the back-layer originals visibly fade out ~950ms
+   late, alongside their own already-in-place front clone (a brief double
+   image). */
+.lumi-anchor[data-lumi-hold-left='true'] .lumi-body #lumib-arms > .lumib-arm,
+.lumi-anchor[data-lumi-hold-left='true'] .lumi-body #lumib-gloves > .lumib-glove {
+  opacity: 0;
+  transition: none;
+}
+.lumi-anchor[data-lumi-hold-right='true'] .lumi-body #lumib-arms > g > .lumib-arm,
+.lumi-anchor[data-lumi-hold-right='true'] .lumi-body #lumib-gloves > g > .lumib-glove {
+  opacity: 0;
+  transition: none;
+}
+
+/* Reduced motion needs NO extra rule here: lumi-intervention.js's own
+   wiggle() already checks prefers-reduced-motion itself (matching every
+   other reduced-motion path in this file/lumi.css) and, when it matches,
+   sets the hold/raise pose's `transform` directly via inline style instead
+   of starting a WAAPI loop -- so the hand still visibly rests on/holds the
+   card, statically, exactly as "no hand animation" (not "no hand pose")
+   requires; only the motion is skipped, never the pose itself. */

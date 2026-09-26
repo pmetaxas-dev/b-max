@@ -1,0 +1,323 @@
+/*
+  Lumi idle animation (float, aura pulse, blink), talking look, the small
+  lamp size (~45px visible bulb) and the full-body emergence layer.
+
+  Works on an INLINE copy of lumi.svg only (CSS cannot reach into <img>).
+  Idle motion is scoped to `.lumi-idle`, which lumi.js adds to the <svg>.
+  The artwork is never edited; this file only targets its existing ids.
+
+  Motion units are SVG user units (the viewBox is 300 wide), so distances
+  scale with the rendered size: 8 units is ~1.8px at the 67.5px lamp box.
+  Override --lumi-float-distance on the <svg> to tune it.
+*/
+
+/* Lamp size + position, and the full-body layer                      */
+/*                                                                    */
+/* Markup:                                                            */
+/*   .lumi-anchor                     POSITION only (zero-size point) */
+/*   ├── .lumi-body   > <svg>         the body, behind the lamp       */
+/*   └── .lumi        > <svg>         the lamp: always there, ~45px   */
+/*                                                                    */
+/*  - .lumi-anchor is a zero-size point that owns POSITION. It marks  */
+/*    Lumi's centre. Drag/persistence code only sets --lumi-x and     */
+/*    --lumi-y on it (or replaces left/top). Its parent must be       */
+/*    positioned (use position:fixed for the real overlay).           */
+/*  - .lumi is the lamp and is Lumi's permanent form AND her head. It */
+/*    never grows and never hides. It is centred on the anchor.       */
+/*  - .lumi-body is the neck-down body. It is the SAME BOX as .lumi   */
+/*    (same size, same centre, same 300-unit viewBox), so it always   */
+/*    hangs from the lamp's collar and follows the anchor for free.   */
+/*  - The lamp size is the SVG BOX (67.5px). The visible bulb is 2/3  */
+/*    of the box (its circle is 200 of 300 viewBox units) = 45px; the */
+/*    aura fills the margin.                                          */
+
+.lumi-anchor {
+  position: absolute;
+  left: var(--lumi-x, 0px);
+  top: var(--lumi-y, 0px);
+  width: 0;
+  height: 0;
+  /* Own stacking context: keeps Lumi one unit in the page's stacking order
+     and lets the body sit behind the lamp (z-index: -1) without falling
+     behind the page. */
+  isolation: isolate;
+
+  --lumi-size: 67.5px;   /* lamp SVG box; visible bulb = 45px */
+
+  /* Viewport safety (for the future drag/clamp code; nothing uses these yet).
+     How far the ACTIVE body reaches from the anchor, in px. The body is
+     glued to the lamp, so clamping means keeping the ANCHOR at least this
+     far from the viewport edges (the lamp's own aura is wider than the body
+     sideways, so only "down" really matters). */
+  --lumi-body-reach-down: calc(var(--lumi-size) * 1.15);    /* shadow bottom: y=495 of 300 -> (495-150)/300 */
+  --lumi-body-reach-x: calc(var(--lumi-size) * 0.3);        /* gloves/shoes, each side */
+}
+
+.lumi {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--lumi-size);
+  height: var(--lumi-size);
+  transform: translate(-50%, -50%);
+  /* Draggable (enableLumiDrag, lumi.js): grab affordance, and touch-action:
+     none so a touch-drag moves Lumi instead of scrolling the page. Only
+     ever a visual/input hint -- lumi.js itself still refuses to start a
+     drag while the body is out (data-lumi-body != "hidden"). */
+  cursor: grab;
+  touch-action: none;
+}
+
+.lumi-anchor[data-lumi-dragging] .lumi {
+  cursor: grabbing;
+}
+
+.lumi > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Full-body emergence                                                */
+/*                                                                    */
+/* The body layer is painted BEHIND the lamp (z-index: -1). The lamp's */
+/* glass and collar are opaque, so anything that sits inside the lamp */
+/* silhouette is simply not visible: that is what "hidden inside the  */
+/* lamp" is. Nothing is faded in as a whole.                          */
+/*                                                                    */
+/* lumi.js sets data-lumi-body on the ANCHOR:                         */
+/*   hidden -> emerging -> active -> returning -> hidden              */
+/* hidden/returning aim at the HIDDEN pose, active/emerging at the    */
+/* ACTIVE pose; CSS transitions do the motion, so reversing halfway   */
+/* simply reverses from where the parts are.                          */
+/*                                                                    */
+/* HIDDEN pose: the core (torso, legs tucked behind it) is scaled to  */
+/* 0.6 with its centre exactly on the lamp centre (150,150 in viewBox  */
+/* units), fully inside the glass. Arms, gloves and shadow are scaled  */
+/* to nothing and transparent.                                        */
+/* ACTIVE pose: every part at its drawn place.                        */
+/*                                                                    */
+/* Emerge order: the core slides down out of the collar (attached),   */
+/* the legs unfold from beneath the torso, the arms unfold from the   */
+/* shoulders, the shadow settles. Return is the same in reverse.      */
+/* Units in transform values are viewBox units (transform-box:        */
+/* view-box).                                                         */
+
+.lumi-body {
+  --lumi-body-return-ms: 1200ms;   /* longest return: last part finishes, THEN visibility drops */
+  --lumi-body-ease: cubic-bezier(0.3, 0.55, 0.25, 1);      /* soft ease-out, no overshoot */
+  --lumi-body-ease-back: cubic-bezier(0.45, 0, 0.3, 1);    /* gentle ease-in-out */
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  width: var(--lumi-size);
+  height: var(--lumi-size);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  visibility: hidden;
+  transition: visibility 0s linear var(--lumi-body-return-ms);
+}
+
+.lumi-body > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lumi-body #lumib-core,
+.lumi-body #lumib-shadow,
+.lumi-body .lumib-arm,
+.lumi-body .lumib-glove {
+  transform-box: view-box;
+}
+
+/* HIDDEN pose + RETURN timing (arms fold in first, the core goes back    */
+/* up into the collar last)                                               */
+/*                                                                        */
+/* #lumib-core is the trunk: the torso, with the legs+shoes tucked behind */
+/* it (they are children of the core, so they travel with it). It scales  */
+/* about a point just behind the collar (150,250) and is shifted up so    */
+/* its centre lands on the lamp centre (150,150) at 0.6 scale. Because    */
+/* the origin is at the top, the core's top edge stays inside the lamp    */
+/* silhouette the whole time: it slides down out of the collar, attached, */
+/* and never floats free.                                                 */
+.lumi-body #lumib-core {
+  transform-origin: 150px 250px;
+  transform: translateY(-140.5px) scale(0.6);
+  transition: transform 800ms var(--lumi-body-ease-back) 400ms;
+}
+/* Legs+shoes: folded up behind the torso (fully inside its silhouette,   */
+/* so hidden by it), then they unfold downward from the torso's bottom.   */
+.lumi-body #lumib-legs {
+  transform-box: view-box;
+  transform-origin: 150px 372px;
+  transform: translateY(-100px) scale(0.5);
+  transition: transform 650ms var(--lumi-body-ease-back) 100ms;
+}
+.lumi-body .lumib-arm,
+.lumi-body .lumib-glove {
+  transform-origin: 106px 292px;                  /* shoulder */
+  transform: scale(0.05);
+  opacity: 0;
+  transition: transform 500ms var(--lumi-body-ease-back), opacity 150ms linear 350ms;
+}
+.lumi-body #lumib-shadow {
+  opacity: 0;
+  transition: opacity 250ms linear;
+}
+
+/* ACTIVE pose + EMERGE timing */
+.lumi-anchor[data-lumi-body="active"] > .lumi-body,
+.lumi-anchor[data-lumi-body="emerging"] > .lumi-body {
+  visibility: visible;
+  transition: visibility 0s;
+}
+.lumi-anchor[data-lumi-body="active"] .lumi-body #lumib-core,
+.lumi-anchor[data-lumi-body="emerging"] .lumi-body #lumib-core {
+  transform: none;
+  transition: transform 800ms var(--lumi-body-ease);
+}
+.lumi-anchor[data-lumi-body="active"] .lumi-body #lumib-legs,
+.lumi-anchor[data-lumi-body="emerging"] .lumi-body #lumib-legs {
+  transform: none;
+  transition: transform 700ms var(--lumi-body-ease) 450ms;
+}
+.lumi-anchor[data-lumi-body="active"] .lumi-body .lumib-arm,
+.lumi-anchor[data-lumi-body="active"] .lumi-body .lumib-glove,
+.lumi-anchor[data-lumi-body="emerging"] .lumi-body .lumib-arm,
+.lumi-anchor[data-lumi-body="emerging"] .lumi-body .lumib-glove {
+  transform: none;
+  opacity: 1;
+  transition: transform 600ms var(--lumi-body-ease) 750ms, opacity 200ms linear 750ms;
+}
+.lumi-anchor[data-lumi-body="active"] .lumi-body #lumib-shadow,
+.lumi-anchor[data-lumi-body="emerging"] .lumi-body #lumib-shadow {
+  opacity: 1;
+  transition: opacity 350ms linear 1000ms;
+}
+
+/* Reduced motion: the poses still switch, just without animating. */
+@media (prefers-reduced-motion: reduce) {
+  .lumi-body,
+  .lumi-body * {
+    transition: none !important;
+  }
+}
+
+.lumi-idle {
+  --lumi-float-distance: 8px;
+  --lumi-float-duration: 5.2s;
+  --lumi-aura-duration: 4.6s;
+  --lumi-blink-duration: 190ms;
+}
+
+/* Eye blink pivots on the eye baseline (feet of the ∩ arcs, y=181). */
+.lumi-idle #lumi-eyes {
+  transform-box: view-box;
+  transform-origin: 150px 181px;
+}
+
+/* The halo scales around its own centre (the bulb centre). */
+.lumi-idle #lumi-aura-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Motion only when the user has not asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  /* 1. Gentle hover: whole head + aura + collar move together. */
+  .lumi-idle #lumi-root {
+    animation: lumi-float var(--lumi-float-duration) ease-in-out infinite;
+  }
+
+  /* 2. Breathing glow: halo swells slightly, rays brighten with it.
+        The bulb glass is not animated, so it never changes size. */
+  .lumi-idle #lumi-aura-halo {
+    animation: lumi-halo var(--lumi-aura-duration) ease-in-out infinite;
+  }
+  .lumi-idle #lumi-aura-rays {
+    animation: lumi-rays var(--lumi-aura-duration) ease-in-out infinite;
+  }
+
+  /* 3. Blink: played once per class toggle by lumi.js (random timing). */
+  .lumi-idle #lumi-eyes.lumi-blink {
+    animation: lumi-blink var(--lumi-blink-duration) ease-in-out 1;
+  }
+}
+
+/* Lock the lamp to the body while it is emerged.                     */
+/*                                                                    */
+/* #lumi-root's float (above) moves the WHOLE lamp SVG group (bulb,   */
+/* aura, collar) up and down inside its own box; it never touches the */
+/* box itself, so the anchor and .lumi-body (which is only ever       */
+/* positioned relative to the anchor) do not move with it. With the   */
+/* body out, that independent float reads as the head drifting loose  */
+/* of the collar rather than as part of the same character, so it is  */
+/* turned off for as long as the body is not fully retracted          */
+/* (emerging, active AND returning, not just active: the collar must  */
+/* stay put for the whole time the body is visibly attached to it,    */
+/* including mid-emergence and mid-return, not only once "active" is  */
+/* reached). It resumes the moment the body is hidden again.          */
+/*                                                                    */
+/* This reuses the existing float animation and the existing          */
+/* data-lumi-body state on the anchor (set by lumi.js); it only turns */
+/* the animation off, so #lumi-root settles at rest (no jump: the     */
+/* float's own range is a few px). Aura breathing, blink and talking  */
+/* are separate elements/animations and are untouched, so they keep   */
+/* running in every state. */
+@media (prefers-reduced-motion: no-preference) {
+  .lumi-anchor[data-lumi-body="emerging"] .lumi-idle #lumi-root,
+  .lumi-anchor[data-lumi-body="active"] .lumi-idle #lumi-root,
+  .lumi-anchor[data-lumi-body="returning"] .lumi-idle #lumi-root {
+    animation: none;
+  }
+}
+
+@keyframes lumi-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(calc(var(--lumi-float-distance) * -1)); }
+}
+
+@keyframes lumi-halo {
+  0%, 100% { transform: scale(1);    opacity: 0.8; }
+  50%      { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes lumi-rays {
+  0%, 100% { opacity: 0.65; }
+  50%      { opacity: 1; }
+}
+
+@keyframes lumi-blink {
+  0%   { transform: scaleY(1); }
+  45%  { transform: scaleY(0.1); }
+  60%  { transform: scaleY(0.1); }
+  100% { transform: scaleY(1); }
+}
+
+/* Talking (layered on idle; lumi.js adds .lumi-talking to the <svg>)  */
+/*                                                                    */
+/* The lamp itself speaks. CSS only provides the STATIC look; lumi.js  */
+/* drives the syllable/sway/aura motion (Web Animations) because a     */
+/* natural rhythm needs per-syllable variation.                        */
+/* Uses the existing mouth variant #lumi-mouth-open, which the SVG    */
+/* ships hidden (display="none"); CSS overrides it only while talking. */
+/* Closed = invisible, which is exactly the approved Happy face.       */
+
+.lumi-idle.lumi-talking #lumi-mouth-open {
+  display: inline;
+  opacity: 0;                        /* closed; lumi.js animates it open/closed */
+  transform-box: view-box;
+  transform-origin: 150px 195px;     /* top edge of the mouth: it drops like a jaw */
+}
+
+/* Reduced motion: no animation. A static half-open mouth signals "talking". */
+@media (prefers-reduced-motion: reduce) {
+  .lumi-idle.lumi-talking #lumi-mouth-open {
+    opacity: 1;
+    transform: scale(0.95, 0.55);
+  }
+}
