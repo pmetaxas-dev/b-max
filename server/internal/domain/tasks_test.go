@@ -103,3 +103,19 @@ func TestTaskToRemindPacesAndStops(t *testing.T) {
 		t.Fatal("an overdue task is reminded again the next day")
 	}
 }
+
+// "Sleep before 00:00" is the end of today. It used to be read as the midnight
+// that had already passed, which made it urgent and put it first all day.
+func TestMidnightDeadlineIsTheEndOfTheDay(t *testing.T) {
+	sleep := Idea{Type: "task", Text: "Sleep", Deadline: "00:00", EstimateMin: 60, Due: "2026-09-18"}
+	evening := time.Date(2026, 9, 18, 20, 0, 0, 0, time.Local)
+	if at, ok := sleep.DeadlineAt(evening); !ok || !at.Equal(time.Date(2026, 9, 19, 0, 0, 0, 0, time.Local)) {
+		t.Fatalf("deadline at %v %v, want the next midnight", at, ok)
+	}
+	if sleep.DeadlineUrgent(evening) {
+		t.Fatal("sleep at 20:00 with a midnight deadline is not urgent yet")
+	}
+	if late := time.Date(2026, 9, 18, 23, 30, 0, 0, time.Local); !sleep.DeadlineUrgent(late) {
+		t.Fatal("sleep at 23:30 is urgent")
+	}
+}

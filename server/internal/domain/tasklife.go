@@ -240,6 +240,9 @@ func (i Idea) DeadlineAt(now time.Time) (time.Time, bool) {
 			day = d
 		}
 	}
+	if h == 0 && m == 0 {
+		h = 24 // "before 00:00" is the end of the day, not the midnight that already passed
+	}
 	return time.Date(day.Year(), day.Month(), day.Day(), h, m, 0, 0, now.Location()), true
 }
 
@@ -317,8 +320,8 @@ func (i Idea) DeadlineUrgent(now time.Time) bool {
 		return false
 	}
 	at, ok := i.DeadlineAt(now)
-	if !ok || DayKey(at) != DayKey(now) {
-		return false
+	if !ok || DayKey(at.Add(-time.Second)) != DayKey(now) {
+		return false // (a deadline at midnight still belongs to the day that ends)
 	}
 	est := time.Duration(i.EstimateMin) * time.Minute
 	if i.EstimateMin == 0 {
