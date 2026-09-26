@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>B-MAX</title>
+    <link rel="stylesheet" href="../shared/base.css" />
+    <style>
+      body { width: 400px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- The planet lives outside #app so re-rendering the step does not reload it. -->
+      <section id="planet-slot" class="planet-slot" aria-label="Planet" hidden></section>
+      <div id="app"></div>
+    </main>
+    
+    <script type="module" src="summary.js"></script>
+  </body>
+</html>
