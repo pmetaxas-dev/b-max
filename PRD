@@ -1,0 +1,365 @@
+# M.B.A.X. Product Requirements Document
+
+## Document Control
+
+| Field | Value |
+| --- | --- |
+| Product | M.B.A.X. |
+| Team | OpenHackathon M.B.A.X. Team |
+| Document status | Draft |
+| Version | 0.1 |
+| Last updated | 2026-08-31 |
+| Product owner | TBD |
+| Technical lead | TBD |
+| Design lead | TBD |
+
+## 1. Product Summary
+
+M.B.A.X. is a sensory-friendly web application designed to help people with ADHD start tasks, manage distractions, return after losing focus, and complete projects that have remained unfinished. A personalized AI coach turns overwhelming or uninteresting projects into small, engaging actions and adapts the plan when focus breaks.
+
+## 2. Problem Statement
+
+People with ADHD may know what they want to complete but still struggle with task initiation, overwhelm, distraction, loss of context, and returning to interrupted work. Many productivity tools focus on planning and tracking but do not actively reduce the difficulty of the next action or help users recover after their attention shifts.
+
+M.B.A.X. should reduce the effort required to begin, preserve momentum during a focus session, and make returning to interrupted work feel clear and manageable.
+
+## 3. Product Vision
+
+Create a calm, encouraging environment in which users can convert intimidating projects into achievable actions, recover from distraction without shame, and build confidence through visible progress.
+
+## 4. Goals
+
+- Help users turn a project into a clear first action.
+- Reduce the friction involved in beginning a task.
+- Help users recover constructively when focus breaks.
+- Preserve enough context for users to resume work quickly.
+- Allow distracting thoughts to be captured without derailing the current task.
+- Reveal useful patterns in recurring distractions.
+- Reward starting, returning, and completing small steps.
+- Maintain a sensory-friendly, low-pressure user experience.
+
+## 5. Non-Goals for the Initial Release
+
+- Diagnosing or treating ADHD or any medical condition.
+- Replacing professional medical, psychological, or coaching support.
+- Building a full project-management platform for teams.
+- Supporting every productivity workflow or external integration.
+- Using punishment, guilt, streak loss, or manipulative engagement mechanics.
+
+## 6. Target Users
+
+### Primary User
+
+A person with ADHD or similar executive-function challenges who has difficulty starting, sustaining, resuming, or completing personal, academic, or professional tasks.
+
+### Initial User Needs
+
+- “Help me decide what to do first.”
+- “Make this task feel smaller and less overwhelming.”
+- “Help me recover when I get distracted.”
+- “Save where I stopped so I can return later.”
+- “Let me capture unrelated thoughts without following them now.”
+- “Show progress without making me feel judged.”
+
+## 7. Core User Journey
+
+1. The user creates or describes a project.
+2. The AI coach asks for any essential context and proposes a small next action.
+3. The user accepts, edits, or replaces the proposed action.
+4. The user begins a focus session.
+5. The user completes the action, parks a distracting thought, pauses, or reports lost focus.
+6. If focus breaks, Adaptive Focus Recovery adjusts the approach.
+7. The application saves a Return Anchor when the user stops.
+8. The user later resumes from the Return Anchor.
+9. The user receives a gentle reward and progress feedback for starting, returning, or completing work.
+10. Over time, the user may review recurring distraction patterns and useful recovery strategies.
+
+## 8. Functional Requirements
+
+### 8.1 Project and Task Capture
+
+- Users must be able to create, view, edit, archive, and resume projects.
+- A project must support a title, optional description, current status, and next action.
+- Users should be able to enter incomplete or unstructured project descriptions.
+- The system should preserve completed actions and relevant progress history.
+
+### 8.2 Personalized AI Coach
+
+- The AI coach must transform a project into small, concrete actions.
+- Suggested actions should be specific, achievable, and appropriate to the user's context.
+- Users must be able to accept, edit, skip, regenerate, or reject suggestions.
+- The coach should adapt to user preferences and prior feedback where consent and stored data allow it.
+- The coach must communicate supportively without presenting itself as a clinician.
+- AI output must be treated as a suggestion rather than an irreversible instruction.
+
+### 8.3 Focus Sessions
+
+- Users must be able to start, pause, resume, and finish a focus session.
+- A session should display one primary action at a time.
+- Session length may be user-selected or suggested by the system.
+- The interface should minimize unnecessary visual and interaction demands.
+- The system should record session outcomes needed for progress and recovery features.
+
+### 8.4 Adaptive Focus Recovery
+
+When a user reports or demonstrates that focus has broken, the system must offer a recovery path. Depending on the context, it may:
+
+- Simplify the next action.
+- Break the action into a smaller step.
+- Shorten the proposed focus session.
+- Offer a brief reset or pause.
+- Create or update a Return Anchor.
+- Let the user choose a different recovery option.
+
+The recovery experience must avoid shame, punishment, or language that frames distraction as failure.
+
+### 8.5 Distraction Parking
+
+- Users must be able to capture a distracting thought quickly during a session.
+- Capturing a thought should not force the user to leave the current focus context.
+- Parked thoughts must be reviewable later.
+- Users should be able to convert a parked thought into a task, dismiss it, or keep it for later.
+- The system may classify distraction patterns only with clear user awareness and appropriate privacy controls.
+
+### 8.6 Return Anchors
+
+A Return Anchor must preserve a clear re-entry point for interrupted work. It should contain:
+
+- The project and active action.
+- The last meaningful point reached.
+- A short note describing what to do next.
+- Relevant context intentionally saved by the user or system.
+- The creation or update time.
+
+Users must be able to review and edit a Return Anchor before leaving and resume directly from it later.
+
+### 8.7 Progress and Rewards
+
+- The application should recognize starting, returning, and completing small steps.
+- Rewards should gently enrich the visual environment or celebrate progress.
+- Reward feedback must be optional, calm, and non-punitive.
+- Users should be able to reduce or disable visual effects and celebrations.
+- The system should not remove earned progress because of inactivity.
+
+### 8.8 Distraction Insights
+
+- Users should be able to review recurring distraction categories or patterns.
+- Insights should be descriptive and supportive, not diagnostic.
+- Where possible, insights should suggest practical adjustments based on observed patterns.
+- Users must be able to control whether distraction data is stored and analyzed.
+
+### 8.9 User Preferences and Accessibility
+
+- Users should be able to control animation, sound, contrast, visual density, and reward intensity where applicable.
+- The interface must support keyboard navigation and visible focus states.
+- Content must use clear language and avoid unnecessary cognitive load.
+- Accessibility requirements and the target WCAG conformance level are TBD.
+
+## 9. MVP Scope
+
+The proposed MVP includes:
+
+- Project creation and editing.
+- AI-generated task breakdown and next-action suggestions.
+- A single-action focus session.
+- Manual distraction parking.
+- Adaptive Focus Recovery with at least three recovery choices.
+- Return Anchor creation and resumption.
+- Basic positive progress feedback.
+- Essential sensory and accessibility preferences.
+- Basic account, session, and data persistence capabilities if accounts are required.
+
+## 10. Future Scope
+
+- Advanced personalization based on user-approved history.
+- Richer distraction pattern analysis.
+- Calendar, task manager, or project-management integrations.
+- Cross-device synchronization and notifications.
+- Collaborative or accountability features.
+- Expanded reward environments and customization.
+- Voice input or conversational interaction.
+- Offline functionality.
+
+## 11. UX and Design Principles
+
+- **One clear next action:** Prioritize the immediate step over the full workload.
+- **Calm by default:** Avoid visual clutter, sudden movement, and excessive notifications.
+- **Recovery over failure:** Treat distraction as a normal state transition.
+- **User control:** Suggestions, timers, rewards, and effects should remain adjustable.
+- **Low-friction capture:** Important actions should require as few steps as practical.
+- **Visible continuity:** Make it obvious where the user stopped and how to continue.
+- **No dark patterns:** Do not use guilt, artificial urgency, or punitive streak mechanics.
+
+## 12. Non-Functional Requirements
+
+### Performance
+
+- Key interactions should feel immediate under normal conditions.
+- AI processing must display a clear loading state and allow safe recovery from timeouts.
+- Specific performance targets are TBD.
+
+### Reliability
+
+- User-entered tasks, parked thoughts, and Return Anchors must not be lost during ordinary use.
+- Failed saves and AI requests must produce clear, recoverable states.
+- Backup, retention, and recovery requirements are TBD.
+
+### Privacy and Security
+
+- Collect only data necessary for the defined product experience.
+- Clearly explain how project, distraction, and AI interaction data is used.
+- Protect data in transit and at rest according to the selected architecture.
+- Provide appropriate controls for deletion, export, consent, and retention.
+- Do not expose secrets or sensitive user content in logs.
+- Applicable privacy rules, hosting region, age restrictions, and compliance requirements are TBD.
+
+### Accessibility
+
+- Accessibility must be considered from the first design iteration.
+- The product should support reduced motion and non-audio alternatives.
+- Color alone must not communicate essential status.
+- Formal accessibility criteria and testing procedures are TBD.
+
+### AI Safety and Quality
+
+- AI suggestions must be reviewable and editable by the user.
+- The product must define how unsafe, irrelevant, or low-quality AI outputs are handled.
+- Medical claims and diagnostic interpretations must be excluded.
+- Model evaluation, prompt safeguards, moderation, and fallback behavior are TBD.
+
+## 13. Data Requirements
+
+Expected data entities include:
+
+- User or local profile.
+- User preferences.
+- Project.
+- Action or task step.
+- Focus session.
+- Distraction or parked thought.
+- Return Anchor.
+- Reward or progress event.
+- AI interaction metadata required for product operation.
+
+The final schema, data ownership model, retention period, and deletion strategy are TBD.
+
+## 14. Success Metrics
+
+Candidate product metrics include:
+
+- Percentage of created projects that reach a first started action.
+- Median time from project creation to starting the first action.
+- Percentage of interrupted sessions followed by a successful return.
+- Return Anchor usage and resume completion rate.
+- Percentage of suggested actions accepted or edited.
+- Small-step completion rate.
+- User-reported reduction in overwhelm.
+- User-reported usefulness of Adaptive Focus Recovery.
+- Retention and repeat use without dependence on punitive engagement mechanics.
+
+Baseline values, targets, measurement windows, and analytics tooling are TBD.
+
+## 15. Acceptance Criteria for the MVP
+
+- A user can create a project from an unstructured description.
+- The AI coach can suggest a small, concrete next action.
+- The user can edit or reject the suggestion before acting on it.
+- The user can start and complete a focus session around one action.
+- The user can park a distracting thought without leaving the session.
+- The user can activate Adaptive Focus Recovery and select a simpler step, shorter session, or clear stopping point.
+- The user can save a Return Anchor and later resume from it.
+- The product recognizes starting, returning, and completing with gentle feedback.
+- The user can reduce motion or disable non-essential visual rewards.
+- Core flows remain usable with a keyboard and provide understandable error states.
+
+## 16. Technology and Architecture — To Be Populated
+
+| Decision Area | Selected Choice | Rationale | Owner | Status |
+| --- | --- | --- | --- | --- |
+| Frontend framework | TBD | TBD | TBD | Open |
+| Frontend language | TBD | TBD | TBD | Open |
+| Styling/UI system | TBD | TBD | TBD | Open |
+| Backend framework | TBD | TBD | TBD | Open |
+| Backend language | TBD | TBD | TBD | Open |
+| AI provider/API | TBD | TBD | TBD | Open |
+| AI model(s) | TBD | TBD | TBD | Open |
+| Prompt/orchestration approach | TBD | TBD | TBD | Open |
+| Database | TBD | TBD | TBD | Open |
+| Authentication | TBD | TBD | TBD | Open |
+| File/object storage | TBD | TBD | TBD | Open |
+| Hosting/deployment | TBD | TBD | TBD | Open |
+| Analytics | TBD | TBD | TBD | Open |
+| Error monitoring/logging | TBD | TBD | TBD | Open |
+| Testing tools | TBD | TBD | TBD | Open |
+| CI/CD | TBD | TBD | TBD | Open |
+| Source control/repository | GitHub | Existing project context | TBD | Proposed |
+
+### Proposed System Components
+
+- Client application.
+- Application backend or server-side application layer.
+- Persistent data store.
+- Authentication and authorization layer, if accounts are included.
+- AI integration layer with input validation, prompt management, error handling, and usage controls.
+- Analytics and observability layer with privacy-aware event collection.
+
+Final architecture, component boundaries, API design, and deployment topology are TBD.
+
+## 17. Delivery Plan — To Be Populated
+
+| Milestone | Scope | Target Date | Owner | Status |
+| --- | --- | --- | --- | --- |
+| Product definition | Confirm MVP, personas, metrics, and constraints | TBD | TBD | Not started |
+| UX prototype | Validate core start, recovery, and return flows | TBD | TBD | Not started |
+| Technical foundation | Select stack and establish architecture | TBD | TBD | Not started |
+| MVP implementation | Build the accepted MVP scope | TBD | TBD | Not started |
+| Testing and refinement | Accessibility, usability, AI, and reliability testing | TBD | TBD | Not started |
+| Demo/release | Prepare hackathon demonstration or initial release | TBD | TBD | Not started |
+
+## 18. Dependencies
+
+- Access to a suitable AI API and acceptable usage terms.
+- Design and usability feedback from representative users where practical.
+- Decisions on identity, persistence, hosting, and analytics.
+- Time and resource constraints of the OpenHackathon.
+- Privacy and accessibility review appropriate to the release scope.
+
+## 19. Risks and Mitigations
+
+| Risk | Potential Impact | Initial Mitigation |
+| --- | --- | --- |
+| AI produces vague or overwhelming steps | Reduced trust and task initiation | Constrain output, offer editing, evaluate suggestions, and provide fallbacks |
+| Recovery prompts feel judgmental | Users disengage | Use neutral language and test with target users |
+| Excessive visual rewards cause sensory overload | Product conflicts with its core promise | Default to calm feedback and provide controls |
+| Sensitive personal data is over-collected | Privacy and trust harm | Minimize collection and provide transparent controls |
+| MVP scope becomes too broad | Core experience remains unfinished | Prioritize start, recover, return, and complete flows |
+| AI latency or service failure blocks progress | User cannot continue | Provide loading, retry, manual-entry, and non-AI fallback states |
+| Insights are mistaken for diagnosis | User harm and product liability | Use descriptive language and explicit non-medical boundaries |
+
+## 20. Open Questions
+
+- Is the first release anonymous, local-first, or account-based?
+- Which project types should the initial AI coach support best?
+- What information is required to personalize task breakdown safely?
+- How does the user indicate that focus has broken?
+- Which recovery choices belong in the MVP?
+- What precisely should a Return Anchor save automatically?
+- Which rewards are motivating without becoming distracting?
+- What level of distraction analysis is useful and acceptable?
+- What user data may be sent to the AI provider?
+- What data retention and deletion controls are required?
+- What is the target WCAG conformance level?
+- What are the hackathon deadline, team roles, and demo constraints?
+- Which success metric best demonstrates value during the hackathon?
+
+## 21. Decision Log
+
+| Date | Decision | Rationale | Owner |
+| --- | --- | --- | --- |
+| TBD | TBD | TBD | TBD |
+
+## 22. Change Log
+
+| Version | Date | Summary | Author |
+| --- | --- | --- | --- |
+| 0.1 | 2026-08-31 | Initial PRD derived from the original product description | OpenHackathon M.B.A.X. Team |

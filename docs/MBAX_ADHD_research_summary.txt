@@ -1,0 +1,360 @@
+M.B.A.X. – ADHD PRODUCT RESEARCH SUMMARY
+=========================================
+
+1. PROBLEM
+----------
+People with ADHD often struggle with:
+- Task initiation
+- Sustaining attention
+- Returning after distraction
+- Time management
+- Working-memory overload
+- Overwhelm from large or unclear tasks
+- Productivity tools that require too much planning/maintenance
+
+Key insight:
+The main problem is often not “I don’t know what to do.”
+It is “I know what to do, but I cannot start, continue, or return after losing focus.”
+
+Core opportunity:
+Design around recovery from attention breaks, not around perfect focus.
+
+2. WHAT ALREADY EXISTS
+----------------------
+The ADHD/productivity market already contains many strong solutions:
+
+Tiimo
+- Visual planning
+- ADHD-friendly UX
+- Focus timers
+- AI task breakdown
+- Calendar/planning support
+
+Goblin Tools
+- AI task decomposition
+- Breaks large tasks into small steps
+- One-task-at-a-time workflow
+
+Sunsama
+- Daily planning
+- Timeboxing
+- Workload estimation
+- Focus mode
+- Calendar integrations
+
+Focusmate
+- Body doubling
+- Accountability through live co-working
+
+Focus Bear
+- Distraction/site blocking
+- Focus routines
+- Break support
+- AI-assisted relevance filtering
+
+Other newer tools also include:
+- Brain dump → actions
+- Energy-based task selection
+- AI body doubling
+- Guilt-free recovery
+- “Resume where you left off”
+- Parked thoughts
+- Context recovery
+- One-task focus
+
+Conclusion:
+The following are NOT strong differentiators anymore:
+- AI task breakdown
+- Pomodoro/focus timer
+- Brain dump
+- One task at a time
+- Body doubling
+- Website blocking
+- Calendar scheduling
+- Return Anchor by itself
+- “No shame” productivity by itself
+
+They can still be supporting features, but should not be the main innovation claim.
+
+3. MARKET GAP / WHITE SPACE
+---------------------------
+The strongest opportunity is not:
+“How do we keep a person focused forever?”
+
+It is:
+“What happens when focus inevitably breaks?”
+
+More specifically:
+“Can the system understand WHY this user is stuck, choose the right recovery strategy, and learn which intervention helps this specific person return?”
+
+This leads to the proposed direction:
+
+M.B.A.X. = Adaptive Focus Recovery System
+
+4. CORE PRODUCT IDEA
+--------------------
+The main interaction is:
+
+“I’M STUCK”
+
+Instead of always giving the same advice, the system identifies the likely reason:
+
+- Overwhelmed
+- Distracted
+- Bored
+- Confused
+- Restless
+- Cannot start
+
+Then it chooses a different intervention.
+
+Examples:
+
+Overwhelmed
+→ Shrink the task
+→ “Forget the whole project. Write only the title.”
+
+Distracted
+→ Restore context
+→ “You were comparing ADHD apps. Your next step was to find one limitation.”
+
+Bored
+→ Short challenge/sprint
+→ “Let’s do a 3-minute race.”
+
+Confused
+→ Clarify goal
+→ “What does ‘done’ look like?”
+
+Cannot start
+→ Reduce activation energy
+→ “Do not work yet. Just open the document.”
+
+Restless
+→ Short reset
+→ Brief movement/break, then a small return session
+
+5. ADAPTIVE RECOVERY ENGINE
+---------------------------
+Proposed core loop:
+
+User starts task
+→ Focus breaks
+→ User reports “I’m stuck”
+→ System identifies cause
+→ Selects recovery intervention
+→ User attempts return
+→ System measures whether it worked
+→ System learns which recovery strategies work best for that user
+
+This is stronger than generic personalization because:
+
+M.B.A.X. does not only learn when the user is productive.
+It learns HOW the user recovers.
+
+6. RETURN ANCHOR
+----------------
+Return Anchor remains an important feature, but it should be part of the recovery engine rather than the entire USP.
+
+A Return Anchor can preserve:
+
+- What the user was doing
+- What was already completed
+- Where they stopped
+- Why the task matters
+- The immediate next action
+
+Example:
+
+You were:
+Researching ADHD competitors
+
+Completed:
+Tiimo + Focusmate
+
+You were about to:
+Compare weaknesses
+
+Next action:
+Write one limitation of Tiimo
+
+Resume →
+
+Goal:
+Reduce the working-memory cost of re-entering an interrupted task.
+
+7. NEW METRICS
+--------------
+Instead of focusing mainly on:
+- Streaks
+- Focus hours
+- Pomodoros
+- Number of tasks completed
+
+M.B.A.X. could track recovery-specific metrics.
+
+Recovery Time / Return Latency
+Time between attention break and successful return.
+
+Example:
+Week 1: 18 min average
+Week 3: 6 min average
+
+Recovery Success Rate
+Percentage of recovery interventions that lead to a successful return.
+
+Example:
+
+Overwhelmed:
+Micro-step → 82% return rate
+
+Bored:
+3-minute sprint → 71%
+
+Distracted:
+Return Anchor → 88%
+
+Confused:
+Clarify goal → 76%
+
+This can create a personal “attention recovery profile.”
+
+8. POSSIBLE FUTURE DIRECTION: PREDICTIVE DRIFT
+----------------------------------------------
+A more advanced future feature could learn patterns before attention breaks.
+
+Example:
+The user frequently drifts after 12 minutes of research.
+
+M.B.A.X. could gently ask:
+“Still working on competitor research?”
+
+The goal would not be aggressive blocking.
+The goal would be early detection and gentle intervention.
+
+Research question:
+Can software recognize likely attention drift and intervene without becoming another distraction?
+
+This is promising but more technically ambitious than the hackathon MVP.
+
+9. RECOMMENDED MVP
+------------------
+Keep the MVP narrow.
+
+Suggested flow:
+
+1. User captures a messy/overwhelming task
+2. AI proposes one tiny next action
+3. User starts a focus session
+4. User can park unrelated thoughts
+5. User presses “I’M STUCK”
+6. User selects why:
+   - overwhelmed
+   - distracted
+   - bored
+   - confused
+   - cannot start
+7. M.B.A.X. provides an adaptive intervention
+8. Return Anchor preserves context if the user stops
+9. User resumes
+10. System records whether the recovery strategy worked
+
+Core loop:
+
+START
+→ DRIFT
+→ RECOVER
+→ RETURN
+→ LEARN
+→ PROGRESS
+
+10. POSITIONING
+---------------
+Avoid:
+
+“An AI productivity app for ADHD.”
+
+Better:
+
+“M.B.A.X. is an adaptive focus-recovery system that learns what helps you get unstuck.”
+
+Possible pitch:
+
+“Most productivity apps measure how long you stay focused.
+M.B.A.X. focuses on what happens when focus breaks.
+
+It identifies why the user is stuck, chooses a recovery strategy,
+preserves their context, and learns which intervention actually helps them return.
+
+The goal is not perfect focus.
+It is faster recovery.”
+
+11. MAIN RESEARCH HYPOTHESIS
+----------------------------
+M.B.A.X. explores whether personalized adaptive interventions can reduce the time it takes a person with ADHD to return to a task after attention breaks.
+
+12. CURRENT ARCHITECTURE FIT
+----------------------------
+The architecture already designed can support this direction.
+
+Existing logical concepts:
+- Project
+- Action
+- Focus Session
+- Distraction
+- Recovery Event
+- Return Anchor
+- Progress Event
+- AI Integration Boundary
+- Local-first persistence
+
+Current architecture decisions:
+- Modular monolith
+- Browser/local-first MVP
+- No account required
+- localStorage for MVP
+- AI behind replaceable boundary
+- User-confirmed state independent from AI
+- Return Anchors and focus state persist
+- No microservices
+- No calendar/wearable/social/team features in MVP
+
+Therefore the product can pivot toward Adaptive Recovery without rebuilding the architecture from scratch.
+
+13. NEXT RESEARCH STEP
+----------------------
+Before finalizing the PRD, build a white-space competitor matrix.
+
+Compare approximately 10–15 apps against features such as:
+
+- Detects user is stuck
+- Identifies reason for being stuck
+- Adaptive intervention
+- Task shrinking
+- Sprint/challenge
+- Context restoration
+- Return Anchor
+- Learns recovery success
+- Recovery Time metric
+- Recovery Success Rate
+- Predictive drift
+- Guilt-free recovery
+- Distraction parking
+- AI body double
+- Website blocking
+
+Goal:
+Verify that “Adaptive Recovery + learning what helps the individual recover”
+is sufficiently differentiated from existing products before implementation.
+
+FINAL CONCLUSION
+----------------
+Do not build another ADHD planner.
+
+Build around the moment productivity tools usually fail:
+
+the moment the user loses focus, gets stuck, or cannot restart.
+
+M.B.A.X. should not promise perfect attention.
+
+It should help the user recover faster, with less friction, and learn which recovery strategy works best for them.
