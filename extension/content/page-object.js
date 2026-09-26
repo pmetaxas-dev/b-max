@@ -993,9 +993,8 @@ export async function start() {
     placeCaptureNearMax(chatPanel);
   }
 
-  function toggleChat() {
-    if (chatOpen) closeChat({ returnFocus: true });
-    else openChat();
+  function openChatFromLamp() {
+    if (!chatOpen) openChat();
   }
 
   function openChat() {
@@ -1183,7 +1182,7 @@ export async function start() {
     if (!parked.hidden) placeCaptureNearMax();
     if (!chatPanel.hidden) placeCaptureNearMax(chatPanel);
   };
-  const loaded = await loadMax(root, () => toggleChat(), popupCheck, followMax);
+  const loaded = await loadMax(root, () => openChatFromLamp(), popupCheck, followMax);
   window.addEventListener('resize', followMax);
   if (!loaded) { host.remove(); return; } // sign-in popup window
   if (!host.isConnected) return; // page navigated away during the async load

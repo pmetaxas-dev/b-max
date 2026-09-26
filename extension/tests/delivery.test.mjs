@@ -918,7 +918,7 @@ function chatUI() {
 const ticks = async () => { for (let i = 0; i < 6; i++) await flush(); };
 const texts = (parent) => parent.children.map((c) => c.textContent);
 
-test('the lamp opens Max with his whole body and a question; a second press folds him back', async () => {
+test('the lamp opens Max and repeat clicks leave the chat open', async () => {
   const { lamp } = captureUI();
   lamp.listeners.click();
   const { panel, log, chips } = chatUI();
@@ -927,8 +927,8 @@ test('the lamp opens Max with his whole body and a question; a second press fold
   assert.deepEqual(chips.children.map((b) => b.textContent), ['What should I do now?', "I don't know where to start", 'New task', 'An idea']);
   assert.deepEqual(maxCalls, ['emerge']);
   lamp.listeners.click();
-  assert.equal(chatUI().panel.hidden, true);
-  assert.deepEqual(maxCalls, ['emerge', 'return']);
+  assert.equal(chatUI().panel.hidden, false, 'the lamp should not close the chat');
+  assert.deepEqual(maxCalls, ['emerge']);
 });
 
 test('what the user tells Max goes to the server chat; he answers, keeps it and folds back by himself', async () => {

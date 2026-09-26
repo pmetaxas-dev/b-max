@@ -80,3 +80,23 @@ func TestARepeatedMessageIsCorrected(t *testing.T) {
 		t.Fatalf("got %v %q after %d requests", err, out.Reply, len(*asked))
 	}
 }
+
+
+func TestRepeatedReplyWithAddedQuestionIsCorrected(t *testing.T) {
+	previous := "Great, becoming a millionaire it is. First step: list three possible income ideas (about 15 min)."
+	h := []domain.ChatMessage{
+		{Role: "max", Text: previous},
+		{Role: "user", Text: "Developing an app, trying to invest, and help me find the third."},
+	}
+	repeated := `{"reply":"Great, becoming a millionaire it is. First step: list three possible income ideas (about 15 min). Apart from that, is there another task you want to tackle today?"}`
+	corrected := `{"reply":"An app and investing are two promising paths. A third could be offering a small service or digital product; want to brainstorm options?"}`
+	c, asked := fakeChatServer(t, []string{repeated, corrected})
+
+	out, err := c.Chat(context.Background(), domain.ChatContext{Onboarded: true, LangHint: "en"}, h)
+	if err != nil || out.Reply != "An app and investing are two promising paths. A third could be offering a small service or digital product; want to brainstorm options?" || len(*asked) != 2 {
+		t.Fatalf("got %v %q after %d requests", err, out.Reply, len(*asked))
+	}
+	if !strings.Contains((*asked)[1], "repeated your previous reply") {
+		t.Error("the correction must identify the repeated previous reply")
+	}
+}
