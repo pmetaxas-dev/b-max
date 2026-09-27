@@ -183,6 +183,17 @@ func (a *App) NextEra() string {
 	}
 	next := (domain.EraIndex(cur) + 1) % len(domain.EraNames)
 	st.ForcedEra = domain.EraNames[next]
+	if st.ForcedEra == domain.EraNames[len(domain.EraNames)-1] {
+		// Reaching Space is a celebration in its own right (confetti, not just
+		// a label change): open the same kind of card a real transition would
+		// (issueNewEra/card.go), so Hover Max picks it up on any page on its
+		// next browser event, exactly like an earned one.
+		st.CelebratedEra = st.ForcedEra
+		st.OpenCard = &domain.OpenCard{
+			Command: domain.CmdShowNewEra, DeliveryID: domain.NewID("delivery"),
+			Date: domain.DayKey(a.now()), OpenedAt: a.now(),
+		}
+	}
 	a.persist()
 	return st.ForcedEra
 }

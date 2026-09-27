@@ -5,6 +5,7 @@
 
 import * as api from '../shared/api.js';
 import { announce, button, clear, el } from '../shared/a11y.js';
+import { burstConfetti } from '../shared/confetti.js';
 import { createPlanetView } from '../shared/planet-placeholder.js';
 import { createChat } from '../shared/chat.js';
 import { createFocusSound, SOUND_KINDS } from '../shared/focus-sound.js';
@@ -698,6 +699,7 @@ function celebrateEra(planetState) {
   if (shownEra && ERAS.indexOf(era) > ERAS.indexOf(shownEra)) {
     const tx = t(chat?.lang ?? 'en');
     say(`🌍 ${tx.eraTitle(tx.eras?.[era] ?? planetState.eraLabel)} ${tx.eraSub}`);
+    if (era === ERAS.at(-1)) burstConfetti(document.body); // reaching Space: the big one
   }
   if (!shownEra || ERAS.indexOf(era) > ERAS.indexOf(shownEra)) shownEra = era;
 }

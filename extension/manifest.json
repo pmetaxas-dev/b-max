@@ -27,6 +27,7 @@
     {
       "resources": [
         "content/page-object.js", "content/anchor.js", "content/page-metadata.js", "content/voice-answer.js", "shared/a11y.js", "shared/messaging.js", "shared/i18n.js", "shared/auth-pages.js",
+        "shared/confetti.js", "shared/planet-state.js",
         "shared/max/max.svg", "shared/max/max-body.svg", "shared/max/max.css",
         "shared/max/max.js", "shared/max/max-intervention.css", "shared/max/max-intervention.js"
       ],

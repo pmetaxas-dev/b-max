@@ -198,3 +198,18 @@ func TestNextEraCyclesThroughAllFiveAndWrapsAround(t *testing.T) {
 		t.Fatalf("NextEra() after Space = %q, want it to wrap to %q", got, domain.EraNames[0])
 	}
 }
+
+// Reaching Space this way must be a real celebration too (the confetti
+// moment), not just a label swap: the next browser event picks up the same
+// CmdShowNewEra card an earned transition would open.
+func TestNextEraToSpaceOpensTheRealNewEraCard(t *testing.T) {
+	r := dayRig(t)
+	last := domain.EraNames[len(domain.EraNames)-1]
+	for era := r.app.NextEra(); era != last; era = r.app.NextEra() {
+	}
+	d := r.ev(time.Minute, domain.EvHeartbeat, pyDocs, true)
+	expect(t, d, domain.CmdShowNewEra, "card_open")
+	if d.Payload.Era != last {
+		t.Fatalf("payload era = %q, want %q", d.Payload.Era, last)
+	}
+}

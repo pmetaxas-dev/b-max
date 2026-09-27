@@ -18,8 +18,10 @@
 
 import { announce, button, el } from '../shared/a11y.js';
 import { isAuthPage } from '../shared/auth-pages.js';
+import { burstConfetti } from '../shared/confetti.js';
 import { t } from '../shared/i18n.js';
 import { MSG, send } from '../shared/messaging.js';
+import { ERAS } from '../shared/planet-state.js';
 import { startAnchorCapture } from './anchor.js';
 import { readPageMetadata } from './page-metadata.js';
 import { matchSpokenAction } from './voice-answer.js';
@@ -596,8 +598,10 @@ export async function start() {
   }
 
   // A new era is announced whatever the day's mode: full body, prominent.
+  // Reaching the very last era (Space) is the big one: confetti on top of it.
   function showNewEra({ era, eraLabel, lang, deliveryId, greeting }) {
     const tx = t(lang);
+    if (era === ERAS.at(-1)) burstConfetti(document.body);
     // Either button is the user's response: the card stops following them.
     const done = () => send({ type: MSG.CARD_CLOSE, deliveryId, reason: 'done' });
     show(`🌍 ${tx.eraTitle(tx.eras[era] ?? eraLabel)}`, {
