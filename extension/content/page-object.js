@@ -980,9 +980,16 @@ export async function start() {
       return;
     }
     const res = await send({ type: MSG.TASK_ACTION, id: doing.id, action: 'resume' });
-    if (!res?.ok || !(res.data?.resumeUrl || res.data?.searchQuery)) {
+    if (!res?.ok) {
       chatParts.status.textContent = tx.resumeNothing;
+      return;
     }
+    // The worker already opened resumeUrl/searchQuery as a new tab
+    // (background/actions.js). Neither one here means the task itself has
+    // nothing to go on (an offline task, e.g.) -- a plain search for the
+    // task's own words is still better than leaving the user with nowhere
+    // to go.
+    if (!res.data?.resumeUrl && !res.data?.searchQuery) send({ type: MSG.OPEN_SEARCH, query: doing.text });
   }
 
   async function chatSubmit(text) {

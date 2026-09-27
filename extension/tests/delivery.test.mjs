@@ -62,7 +62,7 @@ beforeEach(async () => {
   frames = []; messages = []; focused = true; failRender = false; fakeCard = null;
   chatAnswer = { newMessages: ['OK, I kept it.'], suggestions: ['Thanks'] }; maxCalls = [];
   taskActionAnswer = {};
-  chatStateAnswer = { tasks: [{ id: 'idea_4', status: 'doing' }] };
+  chatStateAnswer = { tasks: [{ id: 'idea_4', status: 'doing', text: 'call the bank' }] };
   storageListener = undefined; dragOptions = undefined; storedLocal = {};
   originalInterval = globalThis.setInterval;
   originalTimeout = globalThis.setTimeout;
@@ -985,6 +985,17 @@ test('an ordinary message never gets a "Take me there" chip of its own', async (
   await ticks();
   const { chips } = chatUI();
   assert.deepEqual(chips.children.map((b) => b.textContent), ['Thanks'], 'no "Take me there" for a message that never asked what to do');
+});
+
+test('"Return to my work" falls back to a search of the task\'s own words when the task has neither a saved page nor a search phrase', async () => {
+  taskActionAnswer = {}; // no resumeUrl, no searchQuery (e.g. an offline task)
+  const { lamp } = captureUI();
+  lamp.listeners.click();
+  const { form, status } = chatUI();
+  form.children[3].listeners.click();
+  await ticks();
+  assert.deepEqual(messages.filter((m) => m.type === MSG.OPEN_SEARCH), [{ type: MSG.OPEN_SEARCH, query: 'call the bank' }]);
+  assert.equal(status.textContent, '', 'a search was opened: nothing left unresolved to report');
 });
 
 test('"Return to my work" says so when nothing is in progress', async () => {
