@@ -65,6 +65,7 @@ type Full struct {
 	Today         []domain.Step           `json:"today"`
 	Blacklist     []domain.BlacklistEntry `json:"blacklist"`
 	FastTimings   bool                    `json:"fastTimings"`     // the ⚙️ test panel's switch (dev.go)
+	StormForced   bool                    `json:"stormForced"`     // the ⚙️ test panel's storm switch (dev.go)
 	ClockOffset   int                     `json:"clockOffsetDays"` // the ⚙️ App Clock (demo.go)
 	TodayDate     string                  `json:"todayDate"`       // today by the App Clock
 	Session       struct {
@@ -133,7 +134,10 @@ func (a *App) Full() Full {
 	defer a.mu.Unlock()
 	st := a.st
 	now := a.now()
-	f := Full{Summary: a.summary(), Blacklist: st.Blacklist, FastTimings: st.Settings.Fast, ClockOffset: st.ClockOffsetDays, TodayDate: domain.DayKey(now)}
+	f := Full{
+		Summary: a.summary(), Blacklist: st.Blacklist, FastTimings: st.Settings.Fast,
+		StormForced: st.ForceStorm, ClockOffset: st.ClockOffsetDays, TodayDate: domain.DayKey(now),
+	}
 	f.Session.State = st.Session.State
 	f.Session.Strength = st.Session.ContextStrength
 	f.Week, f.Today = st.WeekSteps(now), st.TodaySteps(now)

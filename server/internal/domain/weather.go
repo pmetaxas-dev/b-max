@@ -32,9 +32,10 @@ func (s *State) BadDay(now time.Time) bool {
 	return now.Hour() >= StormEveningHour && day.WebMs >= s.Settings.snooze(StormEveningWeb).Milliseconds() && len(s.OpenTasksByPriority(now)) > 0
 }
 
-// WeatherAt is the planet's weather now: clear, or a storm on a bad day.
+// WeatherAt is the planet's weather now: clear, or a storm on a bad day, or
+// a storm on demand (ForceStorm, ⚙️ dev.go, for presentations).
 func (s *State) WeatherAt(now time.Time) string {
-	if s.BadDay(now) {
+	if s.ForceStorm || s.BadDay(now) {
 		return WeatherStorm
 	}
 	return WeatherClear

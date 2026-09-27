@@ -60,6 +60,7 @@ func New(app *application.App) http.Handler {
 	// Test tools (dashboard ⚙️); hackathon build only.
 	mux.HandleFunc("POST "+p+"/dev/reset", s.devReset)
 	mux.HandleFunc("POST "+p+"/dev/timings", s.devTimings)
+	mux.HandleFunc("POST "+p+"/dev/storm", s.devStorm)
 	mux.HandleFunc("POST "+p+"/dev/regenerate-steps", s.devRegenerateSteps)
 	mux.HandleFunc("POST "+p+"/steps/respond", s.stepsRespond)
 	mux.HandleFunc("POST "+p+"/steps/start-cue", s.startCue)
@@ -392,6 +393,14 @@ func (s *Server) devTimings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, s.app.SetTimings(in))
+}
+
+func (s *Server) devStorm(w http.ResponseWriter, r *http.Request) {
+	var in application.StormInput
+	if !decode(w, r, &in) {
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"on": s.app.SetStorm(in)})
 }
 
 func (s *Server) cardClose(w http.ResponseWriter, r *http.Request) {

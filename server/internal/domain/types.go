@@ -356,6 +356,9 @@ type State struct {
 	OfferedIdeas  []string  `json:"offeredIdeas,omitempty"`  // ideas offered on a difficult day
 	// ClockOffsetDays moves the App Clock forward, for demos (⚙️, dev.go).
 	ClockOffsetDays int `json:"clockOffsetDays,omitempty"`
+	// ForceStorm shows the planet's storm weather on demand, for presentations
+	// (⚙️, dev.go), whatever WeatherAt would otherwise compute from the day.
+	ForceStorm bool `json:"forceStorm,omitempty"`
 
 	// Chat (chat.go): the life goal the planet grows toward, Max's latest
 	// encouragement, and the conversation.

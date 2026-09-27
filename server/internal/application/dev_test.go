@@ -154,3 +154,28 @@ func TestFastTimingsSwitch(t *testing.T) {
 		t.Fatal("switch still on")
 	}
 }
+
+func TestStormSwitch(t *testing.T) {
+	r := dayRig(t)
+	if r.app.Full().StormForced {
+		t.Fatal("storm must start off")
+	}
+	if on := r.app.SetStorm(application.StormInput{On: true}); !on {
+		t.Fatal("SetStorm(true) must report on")
+	}
+	if !r.app.Full().StormForced {
+		t.Fatal("the full view must show the switch as on")
+	}
+	if w := r.app.ChatState().Planet.Weather; w != domain.WeatherStorm {
+		t.Fatalf("weather = %q, want storm", w)
+	}
+	if on := r.app.SetStorm(application.StormInput{On: false}); on {
+		t.Fatal("SetStorm(false) must report off")
+	}
+	if r.app.Full().StormForced {
+		t.Fatal("switch still on")
+	}
+	if w := r.app.ChatState().Planet.Weather; w != domain.WeatherClear {
+		t.Fatalf("weather = %q, want clear once switched off", w)
+	}
+}

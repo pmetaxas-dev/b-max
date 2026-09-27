@@ -166,6 +166,21 @@ function renderDevPanel() {
       }
     },
   });
+  // Storm weather on demand (Phase 5): shows the planet's bad-day sky for a
+  // presentation without actually needing a bad day to earn it.
+  const storm = el('input', {
+    type: 'checkbox', id: 'dev-storm', checked: !!lastFull?.stormForced,
+    onchange: async (event) => {
+      try {
+        await api.devStorm(event.target.checked);
+        status.textContent = tx.devDone;
+        await load();
+      } catch (err) {
+        event.target.checked = !event.target.checked;
+        status.textContent = err.message;
+      }
+    },
+  });
   // App Clock (Phase 5): days pass for the demo without waiting for them.
   const clock = (body) => async () => {
     try {
@@ -192,6 +207,7 @@ function renderDevPanel() {
       button(tx.devClockReset, clock({ reset: true }), { class: 'secondary' }),
     ),
     el('label', { for: 'dev-fast', class: 'dev-fast' }, fast, tx.devFast),
+    el('label', { for: 'dev-storm', class: 'dev-fast' }, storm, tx.devStorm),
     status,
   );
 }

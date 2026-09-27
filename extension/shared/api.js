@@ -57,6 +57,7 @@ export const cardClose = (deliveryId, reason) => request('POST', '/card/close', 
 // Test tools (dashboard ⚙️); hackathon build only.
 export const devReset = (scope) => request('POST', '/dev/reset', { body: { scope } });
 export const devTimings = (fast) => request('POST', '/dev/timings', { body: { fast } });
+export const devStorm = (on) => request('POST', '/dev/storm', { body: { on } });
 export const devRegenerateSteps = () => request('POST', '/dev/regenerate-steps', { body: {}, timeoutMs: 60000 });
 export const stepsRespond = (stepId, answer) =>
   request('POST', '/steps/respond', { body: { stepId, answer }, timeoutMs: 60000 });

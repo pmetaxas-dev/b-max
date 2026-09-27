@@ -154,3 +154,17 @@ func (a *App) SetTimings(in TimingsInput) domain.Settings {
 	a.persist()
 	return a.st.Settings
 }
+
+type StormInput struct {
+	On bool `json:"on"`
+}
+
+// SetStorm switches the planet's storm weather on or off on demand, for
+// presentations: no need to actually earn a bad day to show it.
+func (a *App) SetStorm(in StormInput) bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.st.ForceStorm = in.On
+	a.persist()
+	return a.st.ForceStorm
+}
