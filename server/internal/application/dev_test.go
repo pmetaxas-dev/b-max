@@ -136,7 +136,7 @@ func TestResetRejectsUnknownScope(t *testing.T) {
 func TestFastTimingsSwitch(t *testing.T) {
 	r := dayRig(t)
 	s := r.app.SetTimings(application.TimingsInput{Fast: true})
-	if !s.Fast || s.GraceSeconds != 10 || s.DayAskAfterSeconds != 60 || s.CompletionThresholdPercent != 5 || s.CardIgnoreSeconds != 60 {
+	if !s.Fast || s.GraceSeconds != 10 || s.DayAskAfterSeconds != 60 || s.CompletionThresholdPercent != 5 || s.CardIgnoreSeconds != 300 {
 		t.Fatalf("fast timings %+v", s)
 	}
 	if !r.app.Full().FastTimings {

@@ -178,6 +178,8 @@ export async function handleMessage(message, sender) {
       return call(() => api.taskHelp(message.id));
     case MSG.CHAT:
       return call(() => api.chat({ message: message.text, channel: 'page', lang: message.lang }));
+    case MSG.CHAT_STATE:
+      return call(() => api.chatState());
     case MSG.TASK_DONE:
       return call(() => api.taskDone(message.id));
     case MSG.LAMP_STATE:

@@ -33,7 +33,7 @@ func fakeChatServer(t *testing.T, answers []string) (*Chatter, *[]string) {
 
 func onboardingHistory() []domain.ChatMessage {
 	return []domain.ChatMessage{
-		{Role: "max", Text: "Tell me, what is the big dream you want to achieve in life?"},
+		{Role: "max", Text: "Tell me your most important goal for the next 5 months."},
 		{Role: "user", Text: "Θέλω ένα αγωνιστό σε αγώνα go-kart."},
 	}
 }

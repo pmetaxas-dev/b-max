@@ -10,7 +10,7 @@ Two parts: a local **Go server** (all the rules, and the AI calls to Groq) and a
 ## Run
 
 ```bash
-cd 'E:/2026_projects!/openhackathon-demo/demo-hackathon'
+cd 'E:/2026_projects!/b-max/server'          # the Go module is in server/, not the repository root
 export GROQ_API_KEY="your-groq-api-key"      # chat and microphone need it
 export GROQ_MODEL="openai/gpt-oss-120b"      # optional
 go run ./cmd/server                           # listens on 127.0.0.1:8787

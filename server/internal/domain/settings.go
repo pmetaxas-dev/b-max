@@ -31,15 +31,17 @@ type Settings struct {
 }
 
 // FastSettings are short timings for trying the app by hand: return screen
-// after 10 s, day question after 1 min, completion prompt at 5% of a step,
-// an ignored card closes after 1 active minute.
+// after 10 s, day question after 1 min, completion prompt at 5% of a step.
+// CardIgnoreSeconds is deliberately left at its default: shortening it here
+// made the Max card vanish before there was time to read it or respond,
+// even though Fast mode is meant to speed up waiting for OTHER prompts,
+// not cut down how long an already-open card stays up.
 func FastSettings() Settings {
 	s := DefaultSettings()
 	s.GraceSeconds = 10
 	s.DayAskAfterSeconds = 60
 	s.DayReaskSeconds = 120
 	s.CompletionThresholdPercent = 5
-	s.CardIgnoreSeconds = 60
 	s.CompletionReaskSeconds = 60
 	s.TaskRemindSeconds = 90
 	s.TaskDistractionRemindSeconds = 20

@@ -27,7 +27,6 @@ import { matchSpokenAction } from './voice-answer.js';
 const UNDO_WINDOW_MS = 5000; // §8: undo window is 5 seconds
 const CAPTURE_CONFIRMATION_MS = 4000;
 const THUMBS_UP_MS = 2500;
-const CHAT_LINGER_MS = 6000; // how long Max stays after he has said everything
 // Cards whose rendering is acknowledged to the server (issued deliveries).
 const ACKNOWLEDGED = new Set(['SHOW_RAMP', 'ASK_DAY', 'SHOW_NEW_ERA', 'SHOW_TASK', 'SHOW_WELCOME_BACK', 'SHOW_TREASURE', 'SHOW_OLD_IDEA']);
 
@@ -89,13 +88,22 @@ const CSS = `
    shifts position or the card's anchor. */
 .max-anchor > .max > svg { transition: filter 160ms ease-out; }
 /* The lamp's brightness: unseen ideas (off / medium / full). The number is
-   also written beside her (.max-count), so light is never the only signal. */
-.max-anchor[data-lamp="off"] > .max > svg { filter: saturate(0.7) brightness(0.85); }
-.max-anchor[data-lamp="medium"] > .max > svg { filter: drop-shadow(0 0 4px rgba(255, 213, 74, 0.6)); }
-.max-anchor[data-lamp="full"] > .max > svg { filter: drop-shadow(0 0 10px rgba(255, 213, 74, 0.95)) brightness(1.1); }
+   also written beside her (.max-count), so light is never the only signal.
+   Both stay hidden off a resting Max -- an idea count sitting on her head is
+   not something to see at a glance while working -- and reveal only on
+   hover/focus of the anchor, same as any other on-demand detail. */
+.max-anchor:hover[data-lamp="off"] > .max > svg,
+.max-anchor:focus-within[data-lamp="off"] > .max > svg { filter: saturate(0.7) brightness(0.85); }
+.max-anchor:hover[data-lamp="medium"] > .max > svg,
+.max-anchor:focus-within[data-lamp="medium"] > .max > svg { filter: drop-shadow(0 0 4px rgba(255, 213, 74, 0.6)); }
+.max-anchor:hover[data-lamp="full"] > .max > svg,
+.max-anchor:focus-within[data-lamp="full"] > .max > svg { filter: drop-shadow(0 0 10px rgba(255, 213, 74, 0.95)) brightness(1.1); }
 .max-count { position: absolute; right: -6px; bottom: -4px; min-width: 20px; height: 20px; padding: 0 5px;
               box-sizing: border-box; border-radius: 10px; background: #1f2937; color: #ffffff; border: 2px solid #ffd54a;
-              font: 700 12px/16px system-ui, sans-serif; text-align: center; pointer-events: none; }
+              font: 700 12px/16px system-ui, sans-serif; text-align: center; pointer-events: none;
+              opacity: 0; transition: opacity 120ms ease-out; }
+.max-anchor:hover > .max-count,
+.max-anchor:focus-within > .max-count { opacity: 1; }
 .max-anchor > .max:hover > svg,
 .max-anchor > .max:focus-visible > svg { filter: drop-shadow(0 0 6px rgba(255, 213, 74, 0.9)) brightness(1.06); }
 /* .max is a real <button> (a11y.js only allows on* handlers on real
@@ -115,9 +123,12 @@ const CSS = `
 .chat-log .m { margin: 0; padding: 6px 10px; border-radius: 10px; overflow-wrap: anywhere; }
 .chat-log .m-max { align-self: flex-start; background: #374151; }
 .chat-log .m-user { align-self: flex-end; background: #0b3d63; }
-.chat-form { display: flex; gap: 8px; }
+.chat-form { display: flex; flex-wrap: wrap; gap: 8px; }
 .chat-form input { box-sizing: border-box; flex: 1; min-width: 0; min-height: 44px; padding: 0 10px; font: inherit;
                    color: #ffffff; background: #111827; border: 2px solid #ffffff; border-radius: 8px; }
+/* Its own full-width row under input/mic/send, not squeezed beside them --
+   this is the one button that must never be missed for lack of room. */
+.chat-form .chat-return { flex: 1 1 100%; }
 .chat button { min-height: 44px; min-width: 44px; padding: 8px 14px; font: inherit; border-radius: 8px; cursor: pointer;
                color: #111827; background: #ffffff; border: 2px solid #ffffff; }
 .chat button:disabled { opacity: .6; cursor: not-allowed; }
@@ -825,7 +836,6 @@ export async function start() {
   let micPurpose = 'chat'; // 'chat': into the text box; 'answer': press a button of the open card
   let micHeard = '';
   let sendTimer = null;
-  let chatCloseTimer;
   let lampLang = 'en';
   let chatParts; // { log, input, send, status, chips }
 
@@ -955,12 +965,30 @@ export async function start() {
     startDictation('chat');
   }
 
+  // "Return to my work": the same resume action as the card's "Take me
+  // back" (showTaskMode), just reachable from chat too, since chat has no
+  // task id of its own to act on -- ask the server which task is in
+  // progress right now, then resume that one.
+  async function returnToWork() {
+    const tx = t(lampLang);
+    chatParts.status.textContent = '';
+    const stateRes = await send({ type: MSG.CHAT_STATE });
+    const doing = stateRes?.ok ? (stateRes.data.tasks ?? []).find((task) => task.status === 'doing') : null;
+    if (!doing) {
+      chatParts.status.textContent = tx.resumeNothing;
+      return;
+    }
+    const res = await send({ type: MSG.TASK_ACTION, id: doing.id, action: 'resume' });
+    if (!res?.ok || !(res.data?.resumeUrl || res.data?.searchQuery)) {
+      chatParts.status.textContent = tx.resumeNothing;
+    }
+  }
+
   async function chatSubmit(text) {
     cancelSend();
     text = text.trim();
     if (!text || chatBusy) return;
     const tx = t(lampLang);
-    clearTimeout(chatCloseTimer);
     chatBusy = true;
     chatParts.input.disabled = chatParts.send.disabled = true;
     chatParts.input.value = '';
@@ -987,9 +1015,8 @@ export async function start() {
     const suggestions = res.data.suggestions ?? [];
     chatChips(suggestions.map((label) => ({ label, text: label, send: true })));
     chatParts.input.focus();
-    // He asked something: stay for the answer. Otherwise he says goodbye by
-    // himself: he keeps it, then goes back into the lamp.
-    if (!/[?;\u037e]\s*$/.test(replies.at(-1) ?? '')) chatCloseTimer = setTimeout(closeChat, CHAT_LINGER_MS);
+    // Stays open regardless of what he said: only the \u2715 button (closeChat)
+    // or starting a new page interaction closes it now, never a timer.
     placeCaptureNearMax(chatPanel);
   }
 
@@ -1009,16 +1036,17 @@ export async function start() {
     const input = el('input', { type: 'text', maxlength: 1000, autocomplete: 'off', placeholder: tx.maxPlaceholder, 'aria-label': tx.maxPlaceholder });
     const sendBtn = el('button', { type: 'submit', text: tx.maxSend });
     const micBtn = button(`🎤 ${tx.maxMic}`, () => toggleMic(), { 'aria-pressed': 'false' });
+    // Always present, not tied to any one reply: whatever Max just said, this
+    // is the one way back to the page the user actually left (same resume
+    // action as the card's "Take me back" -- tasks_life.go's DoingTask).
+    const returnBtn = button(tx.maxReturnToWork, () => returnToWork(), { class: 'chat-return' });
     const status = el('p', { class: 'chat-status', role: 'status', 'aria-live': 'polite' });
     const chips = el('div', { class: 'chips' });
     chatParts = { log, input, send: sendBtn, mic: micBtn, status, chips };
     const form = el('form', { class: 'chat-form', novalidate: true, onsubmit: (event) => {
       event.preventDefault();
       chatSubmit(input.value);
-    } }, input, micBtn, sendBtn);
-    // Any interaction keeps him out; only silence sends him back.
-    chatPanel.onpointerdown = () => clearTimeout(chatCloseTimer);
-    input.addEventListener('input', () => clearTimeout(chatCloseTimer));
+    } }, input, micBtn, sendBtn, returnBtn);
     // Touching the text means "I want to fix it": nothing is sent by itself, and a running recording is dropped.
     const takeOver = () => {
       cancelSend();
@@ -1042,7 +1070,6 @@ export async function start() {
 
   function closeChat({ returnFocus = false } = {}) {
     if (!chatOpen) return;
-    clearTimeout(chatCloseTimer);
     cancelSend();
     if (micListening) send({ type: MSG.MIC_ABORT });
     chatOpen = false;

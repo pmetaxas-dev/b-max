@@ -95,7 +95,7 @@ func welcome(lang string) (msgs []string, suggestions []string) {
 		return []string{
 				"Γεια σου! Είμαι ο Max, ο βοηθός σου. Θα είμαι πάντα δίπλα σου για να οργανώνουμε μαζί τη μέρα σου.",
 				"Βλέπεις τον πλανήτη δίπλα μου; Είναι ο δικός σου κόσμος. Ξεκινά άγονος και κάθε φορά που ολοκληρώνεις κάτι μεγαλώνει και εξελίσσεται, μέχρι να γίνει ο κόσμος του στόχου σου.",
-				"Πες μου, ποιο είναι το μεγάλο σου όνειρο, αυτό που θέλεις να πετύχεις στη ζωή;",
+				"Πες μου τον πιο σημαντικό σου στόχο για τους επόμενους 5 μήνες.",
 			}, []string{
 				"Θέλω να τρέξω μαραθώνιο", "Θέλω να τελειώσω τη σχολή μου",
 			}
@@ -103,7 +103,7 @@ func welcome(lang string) (msgs []string, suggestions []string) {
 	return []string{
 			"Hi! I'm Max, your companion. I'll always be by your side to help you organise your day.",
 			"See the planet next to me? It's your own world. It starts barren, and every time you finish something it grows and evolves, until it becomes the world of your goal.",
-			"Tell me, what is the big dream you want to achieve in life?",
+			"Tell me your most important goal for the next 5 months.",
 		}, []string{
 			"I want to run a marathon", "I want to finish my degree",
 		}

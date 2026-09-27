@@ -9,7 +9,7 @@
 ## Πώς τρέχει
 
 ```bash
-cd 'E:/2026_projects!/openhackathon-demo/demo-hackathon/server'
+cd 'E:/2026_projects!/b-max/server'    # το Go module είναι στο server/, όχι στη ρίζα
 export GROQ_API_KEY="το-key"          # απαραίτητο για chat και μικρόφωνο
 export GROQ_MODEL="openai/gpt-oss-120b"   # προαιρετικό (προεπιλογή: llama-3.3-70b-versatile)
 go run ./cmd/server                    # ακούει στο 127.0.0.1:8787

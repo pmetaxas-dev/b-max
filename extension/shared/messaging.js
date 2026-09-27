@@ -24,6 +24,7 @@ export const MSG = {
   MIC_EVENT: 'mic-event',
   STATUS_SPOKEN: 'status-spoken',
   CHAT: 'chat',
+  CHAT_STATE: 'chat-state',
   LAMP_STATE: 'lamp-state',
   IDEA_OFFER: 'idea-offer',
   // worker -> page

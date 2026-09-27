@@ -12,7 +12,7 @@ import { MSG } from '../shared/messaging.js';
 // (a card that shows/hides, renders actions as real buttons, honours
 // `keepOpen`, resolves `ready`) for these tests to keep verifying page-object
 // .js's OWN control flow (ack timing, dismissal scoping, capture form).
-let frames, messages, listener, focused, failRender, fakeCard, chatAnswer, maxCalls, taskActionAnswer;
+let frames, messages, listener, focused, failRender, fakeCard, chatAnswer, maxCalls, taskActionAnswer, chatStateAnswer;
 let storedLocal = {}, storageListener, dragOptions;
 let originalInterval, originalTimeout, originalClearTimeout, timers, timerClock, nextTimer;
 class Element {
@@ -62,6 +62,7 @@ beforeEach(async () => {
   frames = []; messages = []; focused = true; failRender = false; fakeCard = null;
   chatAnswer = { newMessages: ['OK, I kept it.'], suggestions: ['Thanks'] }; maxCalls = [];
   taskActionAnswer = {};
+  chatStateAnswer = { tasks: [{ id: 'idea_4', status: 'doing' }] };
   storageListener = undefined; dragOptions = undefined; storedLocal = {};
   originalInterval = globalThis.setInterval;
   originalTimeout = globalThis.setTimeout;
@@ -127,6 +128,7 @@ beforeEach(async () => {
       sendMessage: async (message) => {
         messages.push(message);
         if (message.type === MSG.CHAT) return { ok: true, data: chatAnswer };
+        if (message.type === MSG.CHAT_STATE) return { ok: true, data: chatStateAnswer };
         if (message.type === MSG.TASK_ACTION) return { ok: true, data: taskActionAnswer };
         if (message.type === MSG.TASK_HELP) return { ok: true, data: { step: 'Open a blank document.', searchQueries: ['pitch outline'] } };
         return { ok: true, data: false };
@@ -931,7 +933,7 @@ test('the lamp opens Max with his whole body and a question; a second press fold
   assert.deepEqual(maxCalls, ['emerge', 'return']);
 });
 
-test('what the user tells Max goes to the server chat; he answers, keeps it and folds back by himself', async () => {
+test('what the user tells Max goes to the server chat; he answers and keeps it, but stays open until the user closes him', async () => {
   const { lamp } = captureUI();
   lamp.listeners.click();
   const { form, input, log, chips, panel } = chatUI();
@@ -942,11 +944,34 @@ test('what the user tells Max goes to the server chat; he answers, keeps it and 
   assert.deepEqual(texts(log), ['Tell me, what do you need?', 'buy milk today', 'OK, I kept it.']);
   assert.deepEqual(chips.children.map((b) => b.textContent), ['Thanks'], "Max's own suggestions replace the starting ones");
   assert.equal(panel.hidden, false, 'he stays a moment');
-  advanceTime(5000);
-  assert.equal(panel.hidden, false);
-  advanceTime(1500);
-  assert.equal(panel.hidden, true, 'then goes back into the lamp');
-  assert.deepEqual(maxCalls, ['emerge', 'return']);
+  advanceTime(60000);
+  assert.equal(panel.hidden, false, 'no timer folds him back; only the user closes him');
+  assert.deepEqual(maxCalls, ['emerge']);
+});
+
+test('"Return to my work" in chat resumes whichever task is in progress, same as the card\'s "Take me back"', async () => {
+  taskActionAnswer = { resumeUrl: 'https://docs.python.org/3/tutorial/' };
+  const { lamp } = captureUI();
+  lamp.listeners.click();
+  const { form, status } = chatUI();
+  const returnBtn = form.children[3];
+  assert.equal(returnBtn.textContent, 'Return to my work');
+  returnBtn.listeners.click();
+  await ticks();
+  assert.deepEqual(messages.filter((m) => m.type === MSG.CHAT_STATE), [{ type: MSG.CHAT_STATE }]);
+  assert.deepEqual(messages.filter((m) => m.type === MSG.TASK_ACTION), [{ type: MSG.TASK_ACTION, id: 'idea_4', action: 'resume' }]);
+  assert.equal(status.textContent, '', 'no error: the worker already opened the page');
+});
+
+test('"Return to my work" says so when nothing is in progress', async () => {
+  chatStateAnswer = { tasks: [] };
+  const { lamp } = captureUI();
+  lamp.listeners.click();
+  const { form, status } = chatUI();
+  form.children[3].listeners.click();
+  await ticks();
+  assert.deepEqual(messages.filter((m) => m.type === MSG.TASK_ACTION), [], 'nothing to resume, so no action is sent');
+  assert.equal(status.textContent, 'No page was saved. Carry on from where you were.');
 });
 
 test('when Max asks something he stays for the answer', async () => {

@@ -766,7 +766,11 @@ async function fetchState() {
     const last = next.messages.at(-1);
     if (last?.role === 'max' && !drawerOpen() && !onboarding()) say(last.text);
   }
-  known = next.messages.length;
+  // Never while a turn is in flight: a poll started before it (or slower than
+  // it) reports a message count from before the turn's own messages landed,
+  // and letting it win here would roll `known` backwards -- the next poll
+  // would then see the turn's own reply as "fresh" and show/speak it again.
+  if (!chat.busy) known = Math.max(known, next.messages.length);
   applyState(next);
 }
 

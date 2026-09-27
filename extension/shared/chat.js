@@ -48,6 +48,13 @@ export function createChat({ onSend, onTalking, onThinking, onTurnDone, live }) 
   const listener = createListener();
   let lang = readSetting('bmax.lang', browserLang());
   let busy = false;
+  // True for the whole turn, including the time Max spends typing/speaking his
+  // reply after it has already arrived -- longer than `busy`, which the input's
+  // disabled state uses and which turns off as soon as the network call
+  // settles. A caller that polls the server for fresh messages while the
+  // drawer is open (dashboard.js's fetchState) must wait for THIS, or it can
+  // re-render/re-speak the very reply that is still being typed out here.
+  let turnBusy = false;
   let listening = false;
   let typing = null; // { finish() } while a reply is being typed
 
@@ -211,6 +218,7 @@ export function createChat({ onSend, onTalking, onThinking, onTurnDone, live }) 
     cancelSend();
     text = text.trim();
     if (!text || busy) return;
+    turnBusy = true;
     typing?.finish();
     setSuggestions([]);
     addUser(text);
@@ -227,12 +235,14 @@ export function createChat({ onSend, onTalking, onThinking, onTurnDone, live }) 
       showStatus(err?.offline ? chatText(lang).offline : err?.code === 'rate_limited' ? chatText(lang).busy(err.seconds ?? 20) : chatText(lang).failed);
       input.value = text;
       setBusy(false);
+      turnBusy = false;
       input.focus();
       return;
     }
     showStatus('');
     setBusy(false);
     for (const line of [reply ?? []].flat()) await addMax(line);
+    turnBusy = false;
     input.focus();
     onTurnDone?.();
   }
@@ -318,7 +328,11 @@ export function createChat({ onSend, onTalking, onThinking, onTurnDone, live }) 
 
   refreshLabels();
   return {
-    get busy() { return busy; },
+    // `busy` alone would go false the moment the network call settles, before
+    // Max is done typing/speaking the reply -- too early for a caller like
+    // dashboard.js's fetchState(), which uses this to avoid touching the log
+    // (re-rendering, or speaking the same reply again) mid-turn.
+    get busy() { return busy || turnBusy; },
     element, addMax, addUser, setMessages, setBusy, setSuggestions, showStatus, submit,
     focus: () => input.focus(),
     get lang() { return lang; },
