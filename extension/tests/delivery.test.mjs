@@ -963,6 +963,30 @@ test('"Return to my work" in chat resumes whichever task is in progress, same as
   assert.equal(status.textContent, '', 'no error: the worker already opened the page');
 });
 
+test('"What should I do now?" and "I don\'t know where to start" get a "Take me there" chip that resumes the same way', async () => {
+  taskActionAnswer = { resumeUrl: 'https://docs.python.org/3/tutorial/' };
+  const { lamp } = captureUI();
+  lamp.listeners.click();
+  const { chips } = chatUI();
+  chips.children[0].listeners.click(); // "What should I do now?"
+  await ticks();
+  assert.equal(chips.children[0].textContent, 'Take me there', 'offered right where the answer appears');
+  chips.children[0].listeners.click();
+  await ticks();
+  assert.deepEqual(messages.filter((m) => m.type === MSG.TASK_ACTION), [{ type: MSG.TASK_ACTION, id: 'idea_4', action: 'resume' }]);
+});
+
+test('an ordinary message never gets a "Take me there" chip of its own', async () => {
+  const { lamp } = captureUI();
+  lamp.listeners.click();
+  const { form, input } = chatUI();
+  input.value = 'buy milk today';
+  submit(form);
+  await ticks();
+  const { chips } = chatUI();
+  assert.deepEqual(chips.children.map((b) => b.textContent), ['Thanks'], 'no "Take me there" for a message that never asked what to do');
+});
+
 test('"Return to my work" says so when nothing is in progress', async () => {
   chatStateAnswer = { tasks: [] };
   const { lamp } = captureUI();

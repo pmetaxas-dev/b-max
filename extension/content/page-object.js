@@ -845,7 +845,8 @@ export async function start() {
   }
 
   function chatChips(items) {
-    chatParts.chips.replaceChildren(...items.map(({ label, text, send: sendNow }) => button(label, () => {
+    chatParts.chips.replaceChildren(...items.map(({ label, text, send: sendNow, onSelect }) => button(label, () => {
+      if (onSelect) return onSelect();
       if (sendNow) return chatSubmit(text);
       chatParts.input.value = text;
       chatParts.input.focus();
@@ -1013,7 +1014,14 @@ export async function start() {
     talkFor(1800);
     updateLamp();
     const suggestions = res.data.suggestions ?? [];
-    chatChips(suggestions.map((label) => ({ label, text: label, send: true })));
+    const chips = suggestions.map((label) => ({ label, text: label, send: true }));
+    // "What should I do now?" and "I don't know where to start" are both
+    // asking to be pointed at something to work on: whatever Max just
+    // answered with, this is the one-tap way there -- the same resume action
+    // as the always-present "Return to my work", offered right where the
+    // answer appears instead of making the user look for the other button.
+    if (text === tx.maxChipNow || text === tx.maxChipStart) chips.unshift({ label: tx.maxTakeThere, onSelect: returnToWork });
+    chatChips(chips);
     chatParts.input.focus();
     // Stays open regardless of what he said: only the \u2715 button (closeChat)
     // or starting a new page interaction closes it now, never a timer.
