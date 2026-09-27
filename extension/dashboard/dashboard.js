@@ -191,6 +191,17 @@ function renderDevPanel() {
       status.textContent = err.message;
     }
   };
+  // Next era on demand: cycles the planet through its five eras for a
+  // presentation, without needing to actually earn the progress.
+  const nextEra = async () => {
+    try {
+      await api.devNextEra();
+      status.textContent = tx.devDone;
+      await load();
+    } catch (err) {
+      status.textContent = err.message;
+    }
+  };
   clear(devPanel);
   devPanel.append(
     el('h2', { text: tx.devTitle }),
@@ -205,6 +216,10 @@ function renderDevPanel() {
       button(tx.devNextDay, clock({ addDays: 1, visited: true }), { class: 'secondary' }),
       button(tx.devAway, clock({ addDays: 5 }), { class: 'secondary' }),
       button(tx.devClockReset, clock({ reset: true }), { class: 'secondary' }),
+    ),
+    el('p', { class: 'muted', text: tx.devEraLabel(lastFull?.planet?.eraLabel ?? '') }),
+    el('div', { class: 'row' },
+      button(tx.devNextEra, nextEra, { class: 'secondary' }),
     ),
     el('label', { for: 'dev-fast', class: 'dev-fast' }, fast, tx.devFast),
     el('label', { for: 'dev-storm', class: 'dev-fast' }, storm, tx.devStorm),

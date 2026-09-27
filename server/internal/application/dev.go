@@ -168,3 +168,21 @@ func (a *App) SetStorm(in StormInput) bool {
 	a.persist()
 	return a.st.ForceStorm
 }
+
+// NextEra advances the planet to the next era on demand, for presentations:
+// no need to actually earn the progress. Starts from whichever era is
+// currently shown (forced or, the first time, the real one) and wraps back
+// to Prehistoric after Space, so the one button cycles through all five.
+func (a *App) NextEra() string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	st := a.st
+	cur := st.ForcedEra
+	if cur == "" {
+		cur = domain.EraForPercent(st.Progress.Percentage)
+	}
+	next := (domain.EraIndex(cur) + 1) % len(domain.EraNames)
+	st.ForcedEra = domain.EraNames[next]
+	a.persist()
+	return st.ForcedEra
+}

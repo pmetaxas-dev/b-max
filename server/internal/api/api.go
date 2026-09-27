@@ -61,6 +61,7 @@ func New(app *application.App) http.Handler {
 	mux.HandleFunc("POST "+p+"/dev/reset", s.devReset)
 	mux.HandleFunc("POST "+p+"/dev/timings", s.devTimings)
 	mux.HandleFunc("POST "+p+"/dev/storm", s.devStorm)
+	mux.HandleFunc("POST "+p+"/dev/era/next", s.devNextEra)
 	mux.HandleFunc("POST "+p+"/dev/regenerate-steps", s.devRegenerateSteps)
 	mux.HandleFunc("POST "+p+"/steps/respond", s.stepsRespond)
 	mux.HandleFunc("POST "+p+"/steps/start-cue", s.startCue)
@@ -401,6 +402,10 @@ func (s *Server) devStorm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"on": s.app.SetStorm(in)})
+}
+
+func (s *Server) devNextEra(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusOK, map[string]string{"era": s.app.NextEra()})
 }
 
 func (s *Server) cardClose(w http.ResponseWriter, r *http.Request) {

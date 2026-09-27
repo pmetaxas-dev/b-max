@@ -83,14 +83,21 @@ func (a *App) summary() Summary {
 	} else {
 		s.Day.Mode = domain.DayUndecided
 	}
+	// Derived from the percentage rather than the stored Progress.Era, so a
+	// state file saved with the older era vocabulary still maps correctly --
+	// unless ForcedEra (⚙️ dev.go's "Next era") pins one on for a
+	// presentation, in which case a percentage inside its own band stands in
+	// for the real one everywhere an era is derived from a percentage.
+	pct := st.Progress.Percentage
+	if st.ForcedEra != "" {
+		pct = domain.EraBandMidpoint(domain.EraIndex(st.ForcedEra))
+	}
 	s.Planet = PlanetVisualState{
-		// Derived from the percentage rather than the stored Progress.Era, so a
-		// state file saved with the older era vocabulary still maps correctly.
-		Progress:    st.Progress.Percentage / 100,
-		Era:         domain.EraForPercent(st.Progress.Percentage),
-		EraLabel:    domain.EraLabelForPercent(st.Progress.Percentage),
+		Progress:    pct / 100,
+		Era:         domain.EraForPercent(pct),
+		EraLabel:    domain.EraLabelForPercent(pct),
 		Weather:     st.WeatherAt(a.now()),
-		Description: EraDescription(st.Progress.Percentage, st.Language()),
+		Description: EraDescription(pct, st.Language()),
 		Parameters:  map[string]float64{}, UnlockedSignatureElements: []string{},
 	}
 	if st.Goal == nil {

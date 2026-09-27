@@ -359,6 +359,10 @@ type State struct {
 	// ForceStorm shows the planet's storm weather on demand, for presentations
 	// (⚙️, dev.go), whatever WeatherAt would otherwise compute from the day.
 	ForceStorm bool `json:"forceStorm,omitempty"`
+	// ForcedEra pins the planet's shown era (one of EraNames) on demand, for
+	// presentations (⚙️, dev.go's "Next era"), instead of the one Progress.Percentage
+	// would otherwise compute. Empty: not forced.
+	ForcedEra string `json:"forcedEra,omitempty"`
 
 	// Chat (chat.go): the life goal the planet grows toward, Max's latest
 	// encouragement, and the conversation.

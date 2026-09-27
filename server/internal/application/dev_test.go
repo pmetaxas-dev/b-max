@@ -179,3 +179,22 @@ func TestStormSwitch(t *testing.T) {
 		t.Fatalf("weather = %q, want clear once switched off", w)
 	}
 }
+
+func TestNextEraCyclesThroughAllFiveAndWrapsAround(t *testing.T) {
+	r := dayRig(t)
+	if era := r.app.ChatState().Planet.Era; era != domain.EraNames[0] {
+		t.Fatalf("a fresh goal must start %q, got %q", domain.EraNames[0], era)
+	}
+	for i, want := range domain.EraNames[1:] {
+		if got := r.app.NextEra(); got != want {
+			t.Fatalf("NextEra() #%d = %q, want %q", i, got, want)
+		}
+		if got := r.app.ChatState().Planet.Era; got != want {
+			t.Fatalf("shown era after NextEra() #%d = %q, want %q", i, got, want)
+		}
+	}
+	// One more press after Space wraps back to the first era.
+	if got := r.app.NextEra(); got != domain.EraNames[0] {
+		t.Fatalf("NextEra() after Space = %q, want it to wrap to %q", got, domain.EraNames[0])
+	}
+}

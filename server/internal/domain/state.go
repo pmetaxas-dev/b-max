@@ -185,6 +185,13 @@ func EraIndexForPercent(pct float64) int {
 	}
 }
 
+// EraBandMidpoint is a representative 0-100 percentage inside era index i's
+// threshold band (§10), for forcing the planet to show a given era (⚙️
+// dev.go's "Next era") without a real percentage to match it to.
+func EraBandMidpoint(i int) float64 {
+	return [5]float64{10, 30, 50, 70, 90}[i]
+}
+
 // WeekSteps are steps scheduled in the current Monday-Sunday week; TodaySteps
 // are those scheduled today. Neither is stored (§9b).
 func (s *State) WeekSteps(now time.Time) []Step {
